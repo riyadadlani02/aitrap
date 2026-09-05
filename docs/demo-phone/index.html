@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aitrap — tap the phone, read the values</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161f; --ink2:#171d29; --line:#28313f; --text:#d7dde8; --dim:#79839a;
+    --faint:#4d5768; --live:#7fd1c1; --call:#e0a33e; --return:#3fb8a0; --bad:#e0656f;
+    --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font:15px/1.6 var(--sans)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  a{color:var(--live)}
+  nav{border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:22px;align-items:center;padding:15px 24px;font-size:14px}
+  nav .logo{font-weight:600}
+  nav a{color:var(--dim);text-decoration:none}
+  nav a:hover{color:var(--text)}
+  nav .sp{margin-left:auto}
+
+  header.top{padding:44px 0 30px}
+  h1{font:600 clamp(26px,3.6vw,38px)/1.15 var(--sans);letter-spacing:-.025em;margin:0;max-width:22ch}
+  header.top p{color:var(--dim);max-width:64ch;margin:14px 0 0}
+  .note{color:var(--faint);font-size:13.5px;margin-top:10px}
+
+  .stage{display:grid;grid-template-columns:376px 1fr;gap:28px;padding-bottom:34px;align-items:start}
+
+  /* phone */
+  .phone{border:10px solid #242b39;border-radius:42px;background:#f2f3f7;overflow:hidden;
+         box-shadow:0 20px 60px rgba(0,0,0,.45);position:relative}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:26px;
+         background:#242b39;border-radius:0 0 16px 16px;z-index:3}
+  .screen{height:660px;overflow-y:auto;background:#f2f3f7;color:#161a22;
+          font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+  .screen header{padding:34px 17px 11px;background:#fff;border-bottom:1px solid #e6e8ef}
+  .screen h2{margin:0;font-size:18px;font-weight:650;letter-spacing:-.02em;color:#161a22}
+  .screen header p{margin:3px 0 0;color:#6b7280;font-size:12.5px}
+  .sec{background:#fff;margin:9px 0;padding:14px 17px;border-top:1px solid #e6e8ef;
+       border-bottom:1px solid #e6e8ef}
+  .sec h3{margin:0 0 10px;font-size:12px;font-weight:600;color:#6b7280;display:flex;
+          justify-content:space-between}
+  .it{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eef0f5}
+  .it:last-child{border-bottom:0}
+  .it b{display:block;font-weight:550;font-size:13.5px}
+  .it small{color:#6b7280;font-size:11.5px}
+  .it span{font-variant-numeric:tabular-nums;font-weight:550}
+  .cprow{display:flex;gap:7px}
+  .cprow input{flex:1;min-width:0;padding:10px 12px;border:1px solid #e6e8ef;border-radius:9px;
+    font:14px inherit;background:#fbfbfd;color:#161a22}
+  .cprow button{border:0;border-radius:9px;padding:10px 16px;font:600 14px inherit;
+    background:#3d4fd6;color:#fff;cursor:pointer}
+  .chips{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+  .chip{border:1px solid #e6e8ef;background:#fbfbfd;border-radius:20px;padding:4px 10px;
+        font-size:11.5px;color:#6b7280;cursor:pointer}
+  .chip.on{background:#eceefb;border-color:#c9cff5;color:#3d4fd6;font-weight:600}
+  .msg{margin-top:9px;padding:8px 11px;border-radius:8px;font-size:12.5px}
+  .msg.err{background:#fdeaec;color:#d23b4e}
+  .msg.ok{background:#e6f6ef;color:#0f9d6b}
+  .tg{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer}
+  .tg b{font-size:13.5px} .tg p{margin:2px 0 0;color:#6b7280;font-size:11.5px}
+  .sw{width:46px;height:28px;border-radius:20px;background:#d5d8e3;position:relative;flex:none;
+      transition:background .18s}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+             background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+  .sw.on{background:#3d4fd6} .sw.on::after{transform:translateX(18px)}
+  .r{display:flex;justify-content:space-between;padding:5px 0;font-size:13.5px;color:#6b7280}
+  .r span:last-child{font-variant-numeric:tabular-nums;color:#161a22}
+  .r .off{color:#0f9d6b}
+  .r.tot{border-top:1px solid #e6e8ef;margin-top:7px;padding-top:10px;font-size:15px;
+         font-weight:650;color:#161a22}
+  .r.tot span:last-child{color:#3d4fd6}
+
+  /* console */
+  .console{border:1px solid var(--line);border-radius:6px;background:var(--ink2);overflow:hidden}
+  .console .bar{padding:11px 16px;border-bottom:1px solid var(--line);display:flex;gap:18px;
+                align-items:center;font:400 12.5px/1 var(--mono);color:var(--dim)}
+  .console .bar b{color:var(--text);font-weight:500}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block;
+       margin-right:7px;animation:beat 1.8s ease-in-out infinite}
+  @keyframes beat{0%,100%{opacity:1}50%{opacity:.25}}
+  .frames{max-height:600px;overflow-y:auto}
+  .fr{border-bottom:1px solid var(--line);padding:11px 16px}
+  .fr-h{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:baseline}
+  .kind{font:500 11px/1.4 var(--mono);color:var(--call)}
+  .kind.return{color:var(--return)}
+  .sym{font:400 13px/1.4 var(--mono);word-break:break-all}
+  .where{font:400 11.5px/1.4 var(--mono);color:var(--faint);white-space:nowrap}
+  .kv{display:grid;grid-template-columns:minmax(96px,auto) 1fr;gap:3px 14px;margin:8px 0 0 68px;
+      font:400 12.5px/1.6 var(--mono)}
+  .k{color:var(--dim)} .v{color:var(--text);word-break:break-all}
+  .v .t{color:var(--faint)}
+  .hot{background:rgba(224,101,111,.14);border-radius:3px;padding:0 5px;color:#ffb3b9}
+  .warm{background:rgba(127,209,193,.14);border-radius:3px;padding:0 5px;color:var(--live)}
+
+  .tell{border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:5px;
+        background:var(--ink2);padding:20px 22px;margin:0 0 46px}
+  .tell h3{margin:0 0 8px;font:600 17px/1.3 var(--sans)}
+  .tell p{margin:0 0 12px;color:var(--dim);max-width:76ch}
+  .tell code{font-family:var(--mono);color:var(--text);font-size:13.5px}
+  .tell .pair{display:grid;grid-template-columns:auto 1fr;gap:5px 16px;font:400 13px/1.7 var(--mono);
+              margin-top:10px}
+  .tell .pair span:first-child{color:var(--dim)}
+  footer{padding:34px 0 60px;color:var(--faint);font-size:13.5px;border-top:1px solid var(--line)}
+  @media (max-width:900px){.stage{grid-template-columns:1fr}.phone{max-width:376px}}
+</style>
+
+<nav><div class="wrap">
+  <span class="logo">aitrap</span>
+  <a href="../">Overview</a>
+  <a href="../demo/">Console demo</a>
+  <span class="sp"></span>
+  <a href="https://github.com/riyadadlani02/aitrap">GitHub</a>
+</div></nav>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Tap the phone. Read the values it produced.</h1>
+    <p>A checkout app talking to a Python backend that has a pricing bug. Change the coupon or the
+       shipping toggle and the frames on the right are what the trap captured from that exact
+       request — the backend never paused to hand them over.</p>
+    <p class="note">Every state here was recorded by running
+       <code>examples/checkout_app/backend.py</code> under aitrap and driving it from the phone.
+       The frames are real captures, not illustrations.</p>
+  </header>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <header><h2>Checkout</h2><p>Review your items and complete your order</p></header>
+        <div class="sec">
+          <h3>Order Items <span id="count"></span></h3>
+          <div id="items"></div>
+        </div>
+        <div class="sec">
+          <h3>Promo &amp; Discounts</h3>
+          <div class="cprow">
+            <input id="code" type="text" value="TECH15" readonly>
+            <button id="apply">Apply</button>
+          </div>
+          <div class="chips">
+            <span class="chip" data-code="TECH15">TECH15 (15% off $600+)</span>
+            <span class="chip" data-code="AUDIO20">AUDIO20 (20% off)</span>
+            <span class="chip" data-code="">No coupon</span>
+          </div>
+          <div class="msg" id="msg"></div>
+        </div>
+        <div class="sec">
+          <div class="tg" id="expressRow">
+            <div><b>Express 2-Day Shipping</b><p>Free on orders over $600 (standard: $25.00)</p></div>
+            <div class="sw on" id="sw"></div>
+          </div>
+        </div>
+        <div class="sec">
+          <h3>Payment Summary</h3>
+          <div id="summary"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="console">
+      <div class="bar">
+        <span><i class="dot"></i>backend running</span>
+        <span><b id="nframes">0</b> frames captured</span>
+        <span><b>0</b> pauses</span>
+      </div>
+      <div class="frames" id="frames"></div>
+    </div>
+  </div>
+
+  <div class="tell">
+    <h3>What the frames give away</h3>
+    <p>Two functions in the same request disagree about what the customer spent. The tier discount
+       sees the real subtotal; the coupon check is handed the figure <em>after</em> that discount
+       came off, so a $628.49 cart is judged against $565.64 and told it hasn't reached $600.
+       Shipping is fed the same wrong number, so free-delivery-over-$600 fails too.</p>
+    <div class="pair" id="tell"></div>
+    <p style="margin-top:14px">The source reads fine — <code>evaluate_promo(coupon, net_subtotal, items)</code>
+       is a plausible line. Only the runtime values show it is the wrong argument.</p>
+  </div>
+</div>
+
+<footer><div class="wrap">
+  Recorded from a real run · <a href="https://github.com/riyadadlani02/aitrap">github.com/riyadadlani02/aitrap</a>
+</div></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = n => '$' + Number(n).toFixed(2);
+const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+let DATA = null, coupon = 'TECH15', express = 1;
+
+const HOT = {'base_amount': 'hot', 'subtotal': 'hot', 'gross_amount': 'warm'};
+
+function shortSym(s){ return s.split('.').slice(-2).join('.'); }
+
+function renderValue(name, v){
+  if (v.value === '«redacted»') return '<span class="v">redacted</span>';
+  if (v.isPrimitive){
+    const cls = HOT[name];
+    const txt = esc(JSON.stringify(v.value));
+    return `<span class="v">${cls ? `<span class="${cls}">${txt}</span>` : txt} <span class="t">${esc(v.type)}</span></span>`;
+  }
+  if (v.value && typeof v.value === 'object'){
+    const inner = Array.isArray(v.value)
+      ? `${v.value.length} items`
+      : Object.entries(v.value).map(([k, s]) => `${esc(k)}=${esc(JSON.stringify(s.value ?? s.type))}`).join('  ');
+    return `<span class="v"><span class="t">${esc(v.type)}</span> ${esc(inner).slice(0, 150)}</span>`;
+  }
+  return `<span class="v"><span class="t">${esc(v.type)}</span></span>`;
+}
+
+function paint(){
+  const st = DATA.states[`${coupon}|${express}`];
+  const r = st.response;
+
+  $('code').value = coupon;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.code === coupon));
+  $('sw').classList.toggle('on', !!express);
+
+  $('count').textContent = `${r.items.length} items`;
+  $('items').innerHTML = r.items.map(i => `<div class="it"><div><b>${esc(i.name)}</b>
+      <small>${esc(i.cat)} · Qty ${i.qty}</small></div><span>${money(i.price * i.qty)}</span></div>`).join('');
+
+  const msg = $('msg');
+  msg.className = 'msg ' + (r.promoError ? 'err' : (r.promoDiscount ? 'ok' : ''));
+  msg.textContent = r.promoError || (r.promoDiscount ? `Coupon applied — ${money(r.promoDiscount)} off` : '');
+  msg.style.display = msg.textContent ? 'block' : 'none';
+
+  $('summary').innerHTML = `
+    <div class="r"><span>Gross Subtotal</span><span>${money(r.grossSubtotal)}</span></div>
+    <div class="r"><span>Member Discount (${esc(r.tier)} Tier)</span><span class="off">−${money(r.memberDiscount)}</span></div>
+    <div class="r"><span>Promo Discount${r.promoDiscount ? '' : ' (None)'}</span><span class="${r.promoDiscount ? 'off' : ''}">${r.promoDiscount ? '−' + money(r.promoDiscount) : money(0)}</span></div>
+    <div class="r"><span>Estimated Tax (8.5%)</span><span>${money(r.tax)}</span></div>
+    <div class="r"><span>Shipping</span><span>${money(r.shipping)}</span></div>
+    <div class="r tot"><span>Total Amount Due</span><span>${money(r.total)}</span></div>`;
+
+  const calls = st.events.filter(e => e.kind === 'call');
+  $('nframes').textContent = st.events.length;
+  $('frames').innerHTML = calls.map(ev => `
+    <div class="fr">
+      <div class="fr-h">
+        <span class="kind ${ev.kind}">${ev.kind}</span>
+        <span class="sym">${esc(shortSym(ev.symbol))}</span>
+        <span class="where">${esc((ev.where || '').split('/').pop())}</span>
+      </div>
+      <div class="kv">${Object.entries(ev.locals || {}).map(([k, v]) =>
+        `<div class="k">${esc(k)}</div>${renderValue(k, v)}`).join('')}</div>
+    </div>`).join('');
+
+  const find = (sym, key) => {
+    const ev = calls.find(e => e.symbol.endsWith(sym));
+    return ev && ev.locals[key] ? ev.locals[key].value : null;
+  };
+  const gross = find('compute_discount', 'gross_amount');
+  const base = find('evaluate_promo', 'base_amount');
+  const ship = find('calculate_shipping', 'subtotal');
+  $('tell').innerHTML = [
+    ['compute_discount saw', gross, 'warm'],
+    ['evaluate_promo was given', base, 'hot'],
+    ['calculate_shipping was given', ship, 'hot'],
+  ].filter(([, v]) => v != null)
+   .map(([label, v, cls]) => `<span>${label}</span><span class="${cls}">${v}</span>`).join('');
+}
+
+$('apply').onclick = paint;
+$('expressRow').onclick = () => { express = express ? 0 : 1; paint(); };
+document.querySelectorAll('.chip').forEach(c =>
+  c.onclick = () => { coupon = c.dataset.code; paint(); });
+
+fetch('timeline.json').then(r => r.json()).then(d => { DATA = d; paint(); });
+</script>
+</html>

@@ -112,7 +112,7 @@
 <nav><div class="wrap">
   <span class="logo">aitrap <em>runtime traps</em></span>
   <a href="#pause">Why</a>
-  <a href="#demo">Demo</a>
+  <a href="#demo">Demos</a>
   <a href="#use">Use it</a>
   <span class="sp"></span>
   <a href="https://github.com/riyadadlani02/aitrap">GitHub</a>
@@ -125,7 +125,7 @@
      you were chasing is gone. <b>aitrap traps capture and continue</b> — real values out of a
      live process that never pauses.</p>
   <div class="cta">
-    <a class="btn solid" href="#demo">See it running</a>
+    <a class="btn solid" href="demo-phone/">Tap the phone demo</a>
     <a class="btn ghost" href="https://github.com/riyadadlani02/aitrap">Read the code</a>
   </div>
 </div></header>
@@ -158,6 +158,17 @@
       </ul>
     </div>
   </div>
+</div></section>
+
+<section id="phone"><div class="wrap">
+  <h2>Tap a phone, read the backend</h2>
+  <p class="sub">A checkout app on a real phone-sized screen, talking to a Python backend with a
+     pricing bug. Change the coupon or the shipping toggle: the frames beside it are what the trap
+     captured from that exact request, while the backend carried on serving.</p>
+  <a class="btn solid" href="demo-phone/">Open the phone demo</a>
+  <p class="demo-hint">Two functions in one request disagree about what the customer spent —
+     <code>compute_discount</code> sees <code>628.49</code>, <code>evaluate_promo</code> is handed
+     <code>565.64</code>. The source line reads fine; only the live values give it away.</p>
 </div></section>
 
 <section id="demo"><div class="wrap">
