@@ -128,6 +128,33 @@
   #v1 .fr,#v2 .fr{padding:8px 16px}
   .kr{color:var(--ret)}
 
+  /* story scenes */
+  .card{border:1px solid var(--line);border-radius:7px;background:var(--ink2);overflow:hidden;
+        flex:1;min-width:0;display:flex;flex-direction:column}
+  .card .ch{padding:10px 16px;border-bottom:1px solid var(--line);
+            font:400 12.5px/1 var(--mono);color:var(--dim)}
+  .card .body{padding:15px 16px;display:flex;flex-direction:column;gap:9px}
+  .ln{max-width:92%;padding:9px 12px;border-radius:13px;font:400 14px/1.45 var(--sans)}
+  .ln b{display:block;font:400 10.5px/1.4 var(--mono);color:var(--faint);margin-bottom:3px;
+        font-weight:400}
+  .ln.ask{background:#1c2433;align-self:flex-start;border-bottom-left-radius:5px}
+  .ln.tool{align-self:stretch;max-width:100%;background:#151d2b;border:1px solid #222c3c;
+           font:400 12px/1.45 var(--mono);color:#9aa4b7;border-radius:8px;word-break:break-all}
+  .ln.say{background:#25407a;align-self:flex-end;border-bottom-right-radius:5px}
+  .out{margin:4px 16px 15px;border-radius:9px;padding:11px 13px;font:400 13px/1.4 var(--sans)}
+  .out span{display:block;font:400 10.5px/1.4 var(--mono);color:var(--faint);margin-bottom:4px}
+  .out b{font:600 15px/1.4 var(--mono)}
+  .out.bad{background:rgba(224,101,111,.12)} .out.bad b{color:#ff8b95}
+  .out.good{background:rgba(127,209,193,.12)} .out.good b{color:#5fd3b6}
+  .out.empty{background:none;padding:0;margin:0}
+  .story .con{max-height:392px;overflow:hidden}
+  .story .fr{padding:9px 16px}
+  .story .fr-h{grid-template-columns:52px 1fr}
+  .story .sy{font-size:13.5px}
+  .story .kv{grid-template-columns:104px 1fr;margin:5px 0 0 64px;font-size:12.5px}
+  .story h2{margin-bottom:4px}
+  .story .fw{font:400 13px/1 var(--mono);color:var(--faint);margin-bottom:14px}
+
   /* adapter scene */
   #s7 table{margin-top:0;font-size:17px}
   #s7 td,#s7 th{padding:10px 10px}
@@ -263,6 +290,51 @@
   <div class="verdict good" id="vverdict2" style="opacity:0"></div>
 </div>
 
+<div class="scene story" id="st1">
+  <h2 id="st1h"></h2>
+  <div class="fw">LangChain + LangGraph</div>
+  <div class="split" style="margin-top:6px">
+    <div class="card"><div class="ch" id="st1c"></div>
+      <div class="body" id="st1b"></div><div class="out" id="st1o"></div></div>
+    <div class="con" style="flex:1.15">
+      <div class="bar"><span><i class="dot"></i>agent running</span>
+        <span><b id="st1n">0</b> frames</span><span><b>0</b> pauses</span></div>
+      <div id="st1f"></div>
+    </div>
+  </div>
+  <div class="verdict" id="st1v" style="opacity:0"></div>
+</div>
+
+<div class="scene story" id="st2">
+  <h2 id="st2h"></h2>
+  <div class="fw">OpenAI Agents SDK</div>
+  <div class="split" style="margin-top:6px">
+    <div class="card"><div class="ch" id="st2c"></div>
+      <div class="body" id="st2b"></div><div class="out" id="st2o"></div></div>
+    <div class="con" style="flex:1.15">
+      <div class="bar"><span><i class="dot"></i>agent running</span>
+        <span><b id="st2n">0</b> frames</span><span><b>0</b> pauses</span></div>
+      <div id="st2f"></div>
+    </div>
+  </div>
+  <div class="verdict" id="st2v" style="opacity:0"></div>
+</div>
+
+<div class="scene story" id="st3">
+  <h2 id="st3h"></h2>
+  <div class="fw">Pydantic AI</div>
+  <div class="split" style="margin-top:6px">
+    <div class="card"><div class="ch" id="st3c"></div>
+      <div class="body" id="st3b"></div><div class="out" id="st3o"></div></div>
+    <div class="con" style="flex:1.15">
+      <div class="bar"><span><i class="dot"></i>agent running</span>
+        <span><b id="st3n">0</b> frames</span><span><b>0</b> pauses</span></div>
+      <div id="st3f"></div>
+    </div>
+  </div>
+  <div class="verdict" id="st3v" style="opacity:0"></div>
+</div>
+
 <div class="scene" id="s7">
   <h2>Every adapter, both doors.</h2>
   <p class="sub">A trapset is JSON, and it is only trusted once its symbols are watched
@@ -298,7 +370,7 @@
 </div>
 
 <script>
-let CO = null, VO = null, FW = null;
+let CO = null, VO = null, FW = null, ST = null;
 const $ = s => document.querySelector(s);
 const clamp = v => Math.max(0, Math.min(1, v));
 const ease = p => 1 - Math.pow(1 - p, 3);
@@ -308,9 +380,10 @@ const money = n => '$' + Number(n).toFixed(2);
 const SCENES = [
   {id:'s1', at:0},   {id:'s2', at:6},   {id:'s3', at:20},  {id:'s4', at:46},
   {id:'s5', at:66},  {id:'s6', at:82},  {id:'v1', at:99},  {id:'v2', at:114},
-  {id:'s7', at:125}, {id:'s8', at:143}, {id:'s9', at:151},
+  {id:'st1', at:125}, {id:'st2', at:138}, {id:'st3', at:151},
+  {id:'s7', at:164}, {id:'s8', at:182}, {id:'s9', at:190},
 ];
-const DURATION = 159;
+const DURATION = 198;
 
 function phoneHTML(r, o){
   const items = o.items === false ? '' : `
@@ -470,6 +543,107 @@ function voiceScene(st, opts, palette, els){
     fr.slice(0, n).map(e => vFrameHTML(e, palette)).join('');
 }
 
+// ---- story scenes: three framework agents, each with a bug only the values show ----
+// Frames, transcripts and values come out of stories.json (recorded). The narration below
+// is the only authored part.
+const STORY = {
+  st1: {key: 'langgraph_order', cmd: 'aitrap trap --trapset langchain',
+    picks: [['return', 'BaseTool.run', 'returns'], ['call', 'BaseChatModel.invoke', 'input'],
+            ['return', 'reply_node', 'returns']],
+    hot: [1, 2], outFrom: '[say ]', outLabel: 'What the customer was told',
+    head: 'The tool found the date. The customer never got it.',
+    headFixed: 'One argument, and the answer survives.',
+    verdict: '<b>BaseTool.run</b> came back with <b class="n">arriving Friday 12 Sep</b>. ' +
+      'The next frame is the model being handed <b class="n">"Where is my order?"</b> and ' +
+      'nothing else — so it answers with filler, and the filler is what lands in state.',
+    verdictFixed: 'Same graph, same trap. The model\'s input now carries what the lookup ' +
+      'found, and the date is what reaches the customer.'},
+  st2: {key: 'openai_agents_handoff', cmd: 'aitrap trap --trapset openai_agents',
+    picks: [['call', 'execute_handoffs', 'original_input'],
+            ['call', 'decide_replacement', 'max_spend'],
+            ['return', 'decide_replacement', 'returns']],
+    hot: [0, 1, 2], outFrom: '[say ]', outLabel: 'What refunds approved',
+    head: 'The handoff dropped the limit the customer gave.',
+    headFixed: 'Hand over what they said, not a summary of it.',
+    verdict: 'The customer said <b class="n">not above £50</b>. What crossed the handoff was ' +
+      'support\'s summary, so <b>decide_replacement</b> ran with <b class="n">max_spend=None</b> ' +
+      'and approved <b class="n">£129.00</b>. Every step reported success.',
+    verdictFixed: '<b class="n">max_spend=50</b> this time, and the same function picks the ' +
+      '<b class="n">£45.00</b> option — proved by the frame that found it.'},
+  st3: {key: 'pydantic_ai_billing', cmd: 'aitrap trap --trapset pydantic_ai',
+    picks: [['call', 'call_tool', 'name'], ['return', 'credit_for', 'returns'],
+            ['return', 'issue_credit', 'returns']],
+    hot: [1, 2], outFrom: '[tool]', outLabel: 'What was credited',
+    head: 'A £49.99 refund, credited as £4,999.',
+    headFixed: 'Pence to pounds, and the same trap says so.',
+    verdict: 'The invoice store keeps pence. <b>credit_for</b> handed back ' +
+      '<b class="n">4999</b> to a tool that takes pounds, and it credited ' +
+      '<b class="n">GBP 4,999.00</b>. ' +
+      'Both are valid floats, so nothing raised and the agent said it was done.',
+    verdictFixed: '<b class="n">49.99</b> out of the same helper, and the tool\'s own return ' +
+      'says <b class="n">GBP 49.99</b>.'},
+};
+
+const stFind = (frames, [kind, suffix]) =>
+  frames.find(f => f.kind === kind && f.symbol.endsWith(suffix));
+
+const stValue = v => v.type === 'dict'
+  ? Object.entries(v.value || {}).map(([a, b]) => `${a}=${JSON.stringify(b.value)}`).join('  ')
+  : JSON.stringify(v.value);
+
+// The frame carries every local the function had; the scene shows the field the story turns
+// on, plus at most one other that says something.
+function stFrameHTML(f, field, hot){
+  if (!f) return '';
+  const all = Object.entries(f.locals || {});
+  if (f.returned) all.push(['returns', f.returned]);
+  const keep = all.filter(([k, v]) => k === field
+    || (v.value !== null && v.value !== '' && v.value !== false));
+  const rows = keep.length > 2 ? keep.filter(([k]) => k === field).concat(
+    keep.filter(([k]) => k !== field).slice(0, 1)) : keep;
+  return `<div class="fr"><div class="fr-h">
+      <span class="kd${f.kind === 'return' ? ' kr' : ''}">${esc(f.kind)}</span>
+      <span class="sy">${esc(f.symbol.split('.').slice(-2).join('.'))}</span></div>
+    <div class="kv">${rows.map(([k, v]) => {
+      const txt = stValue(v);
+      return `<div class="kk">${esc(k)}</div><div class="vv">${k === field && hot
+        ? `<span class="${hot}">${esc(txt)}</span>` : esc(txt)}</div>`;
+    }).join('')}</div></div>`;
+}
+
+function storyScene(id, local){
+  const spec = STORY[id];
+  const st = ST.stories.find(s => s.name === spec.key);
+  const fixed = local > 7.4, side = fixed ? st.fixed : st.broken;
+  const into = fixed ? local - 7.4 : local;
+  // one of each: what was asked, what the tool returned, what the agent said back
+  const lines = ['[ask ', '[tool', '[say ']
+    .map(k => side.transcript.find(l => l.startsWith(k))).filter(Boolean);
+  $(`#${id}h`).textContent = fixed ? spec.headFixed : spec.head;
+  $(`#${id}c`).textContent = spec.cmd;
+  $(`#${id}b`).innerHTML = lines.filter((l, i) => into > 0.3 + i * 0.45).map(l => {
+    const cls = l.startsWith('[ask') ? 'ask' : l.startsWith('[tool') ? 'tool' : 'say';
+    const who = {ask: 'Customer', tool: 'tool result', say: 'Agent'}[cls];
+    return `<div class="ln ${cls}"><b>${who}</b>${esc(l.slice(7).trim())}</div>`;
+  }).join('');
+  const outLine = (side.transcript.find(l => l.startsWith(spec.outFrom)) || '').slice(7).trim();
+  const out = $(`#${id}o`), showOut = into > 2.2;
+  out.className = showOut ? 'out ' + (fixed ? 'good' : 'bad') : 'out empty';
+  out.innerHTML = showOut ? `<span>${spec.outLabel}</span><b>${esc(outLine)}</b>` : '';
+  const picked = spec.picks.map(p => stFind(side.frames, p));
+  const n = Math.max(0, Math.min(picked.length, Math.floor(into / 0.75) + 1));
+  $(`#${id}n`).textContent = n;
+  $(`#${id}f`).innerHTML = picked.slice(0, n).map((f, i) => stFrameHTML(
+    f, spec.picks[i][2], spec.hot.includes(i) ? (fixed ? 'warm' : 'hot') : null)).join('');
+  const v = $(`#${id}v`);
+  const at = fixed ? 2.6 : 4.4;
+  v.className = 'verdict' + (fixed ? ' good' : '');
+  if (into > at){
+    v.style.opacity = ease(clamp((into - at) / 0.7));
+    v.innerHTML = fixed ? spec.verdictFixed : spec.verdict;
+  } else v.style.opacity = 0;
+}
+
 // ---- adapters, from the recordings ----
 const shortSym = sym => sym.split('.').slice(-2).join('.');
 const FW_STEP = 2.7;
@@ -585,6 +759,8 @@ function seek(t){
     } else { v.style.opacity = 0; $('#v2h').textContent = 'One line in the matcher. Same traps, re-run.'; }
   }
 
+  if (STORY[cur.id]) storyScene(cur.id, local);
+
   if (cur.id === 's7'){
     const P = FW.panels;
     const i = Math.max(0, Math.min(P.length - 1, Math.floor(local / FW_STEP)));
@@ -616,5 +792,6 @@ window.ready = Promise.all([
   fetch('checkout.json').then(r => r.json()),
   fetch('voice.json').then(r => r.json()),
   fetch('frameworks.json').then(r => r.json()),
-]).then(([c, v, f]) => { CO = c; VO = v; FW = f; seek(0); return true; });
+  fetch('stories.json').then(r => r.json()),
+]).then(([c, v, f, s]) => { CO = c; VO = v; FW = f; ST = s; seek(0); return true; });
 </script>

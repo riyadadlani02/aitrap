@@ -1,0 +1,16 @@
+{
+  "package": "pydantic-ai",
+  "verified_against": "pydantic-ai 2.40.0 — every symbol observed firing",
+  "hooks": {
+    "on-agent-run": [
+      {"symbol": "pydantic_ai.agent.abstract.AbstractAgent.run"}
+    ],
+    "on-llm-request": [
+      {"symbol": "pydantic_ai._agent_graph.ModelRequestNode._make_request"}
+    ],
+    "on-tool-call": [
+      {"symbol": "pydantic_ai.toolsets.function.FunctionToolset.call_tool"},
+      {"symbol": "pydantic_ai._agent_graph.CallToolsNode._handle_tool_calls"}
+    ]
+  }
+}

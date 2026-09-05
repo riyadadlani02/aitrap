@@ -1,6 +1,7 @@
 # aitrap
 
-**[Site and live demo →](https://riyadadlani02.github.io/aitrap/)** ·
+**[Run it live in your browser →](https://riyadadlani02.github.io/aitrap/live/)** ·
+**[Site →](https://riyadadlani02.github.io/aitrap/)** ·
 **[Demo video →](https://riyadadlani02.github.io/aitrap/#video)**
 
 Non-stopping runtime traps for live AI agent processes — so an AI coding agent can read **real
@@ -12,6 +13,24 @@ aitrap trap --trapset livekit             # or: aitrap trap pkg.mod.Class.method
 aitrap poll 0                             # JSON events, non-blocking
 aitrap inspect 160                        # expand an object one level
 ```
+
+## Install
+
+Python 3.12 or newer — the whole design rests on `sys.monitoring`, which does not exist before
+that. No dependencies outside the standard library.
+
+```bash
+pip install git+https://github.com/riyadadlani02/aitrap
+uv pip install git+https://github.com/riyadadlani02/aitrap          # or with uv
+pip install "aitrap[mcp] @ git+https://github.com/riyadadlani02/aitrap"   # with the MCP server
+```
+
+Not on PyPI yet. `.github/workflows/publish.yml` publishes on a `v*` tag once the name is claimed
+there — PyPI trusted publishing, so there is no token to store.
+
+**Or install nothing:** [run it live in your browser](https://riyadadlani02.github.io/aitrap/live/).
+Pyodide is CPython 3.13 compiled to WebAssembly and `sys.monitoring` came with it, so the engine
+runs unmodified in a tab — real traps, real captured values, no server anywhere.
 
 ## Why not just use a debugger
 
@@ -36,8 +55,11 @@ Need to actually step? Use mcp-debugger. This does the thing it can't.
 
 ## Live console
 
-[Try it without installing anything](https://riyadadlani02.github.io/aitrap/demo/) — the real
-console replaying a recorded run of `examples/toy_agent.py`.
+[Try it without installing anything](https://riyadadlani02.github.io/aitrap/live/) — the real
+console, wired to a real aitrap engine running in your browser. Arm a trap on the checkout
+pricing code, apply the coupon, and read the values that come back; tick *apply the fix* and
+the same trap re-reads the repaired run. Nothing is recorded and nothing is served: it is
+CPython 3.13 on WebAssembly, arming `sys.monitoring` traps in your tab.
 
 
 The trap server serves a console at its own port — open it while the target runs:
@@ -58,8 +80,20 @@ a non-primitive to expand it from the live process.
 | [Voice agent](https://riyadadlani02.github.io/aitrap/demo-voice/) | A LiveKit call filed against the wrong person because a matcher defaulted to `self`. Before/after the fix. |
 | [Console](https://riyadadlani02.github.io/aitrap/demo/) | The live console replaying seven recorded runs — plain Python, plus every adapter through both doors: LangChain [sync](https://riyadadlani02.github.io/aitrap/demo/?ds=langchain) / [async](https://riyadadlani02.github.io/aitrap/demo/?ds=langchain_async), OpenAI Agents [async](https://riyadadlani02.github.io/aitrap/demo/?ds=openai_agents) / [run_sync](https://riyadadlani02.github.io/aitrap/demo/?ds=openai_agents_sync), Pydantic AI [async](https://riyadadlani02.github.io/aitrap/demo/?ds=pydantic_ai) / [run_sync](https://riyadadlani02.github.io/aitrap/demo/?ds=pydantic_ai_sync). |
 
-Every state in them is a real capture from `examples/`, in both the broken and repaired form —
-`CHECKOUT_FIXED=1` and `VOICE_FIXED=1` apply the respective repairs. Regenerate the framework
+Every state in them is a real capture from `examples/`, in both the broken and repaired form.
+Each demo agent ships broken on purpose, with one env var that applies the repair, so the before
+and after are both recordable from one file:
+
+| example | the bug | repaired by |
+|---|---|---|
+| `checkout_app/backend.py` | min-spend checked against the post-discount subtotal | `CHECKOUT_FIXED=1` |
+| `voice_agent.py` | relationship matcher only accepts a bare word, defaults to `self` | `VOICE_FIXED=1` |
+| `langgraph_order_agent.py` | reply node prompts the model without the tool's result | `LANGGRAPH_FIXED=1` |
+| `openai_agents_handoff_agent.py` | handoff forwards a summary that drops the customer's £50 cap | `HANDOFF_FIXED=1` |
+| `pydantic_ai_billing_agent.py` | pence handed to a tool that takes pounds — £49.99 credited as £4,999 | `BILLING_FIXED=1` |
+
+None of them raise, and every transcript reads like a working agent. The wrong value is only
+visible in the frame. Regenerate the framework
 recordings (no API keys) with `python scripts/record_timeline.py`.
 
 ## Trap sets

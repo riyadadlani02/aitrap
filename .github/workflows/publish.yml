@@ -1,0 +1,23 @@
+# Publishes to PyPI when a v* tag is pushed. One-time setup on PyPI first: create the
+# project and add a trusted publisher for this repo + this workflow file. No token to store.
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write        # trusted publishing exchanges this for a short-lived token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install build
+      - run: python -m build
+      - run: python tests/test_aitrap.py
+      - uses: pypa/gh-action-pypi-publish@release/v1

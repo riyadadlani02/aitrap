@@ -24,6 +24,17 @@ RUNS = [  # name, trapset, script — every adapter through both doors, sync and
 ]
 
 
+STORIES = [  # name, trapset, script, the env var that repairs it, extra symbols to arm
+    ("langgraph_order", "langchain", "examples/langgraph_order_agent.py", "LANGGRAPH_FIXED",
+     ["examples.langgraph_order_agent.reply_node"]),
+    ("openai_agents_handoff", "openai_agents", "examples/openai_agents_handoff_agent.py",
+     "HANDOFF_FIXED", ["examples.openai_agents_handoff_agent.decide_replacement"]),
+    ("pydantic_ai_billing", "pydantic_ai", "examples/pydantic_ai_billing_agent.py",
+     "BILLING_FIXED", ["examples.pydantic_ai_billing_agent.credit_for",
+                       "examples.pydantic_ai_billing_agent.issue_credit"]),
+]
+
+
 def api(port, method, path, body=None):
     req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", method=method,
         data=json.dumps(body).encode() if body else None,
@@ -99,6 +110,65 @@ def record(name, trapset, script, rounds=4, watch=18, max_objects=1200):
     return len(events)
 
 
+def record_story(name, trapset, script, fixed_env=None, symbols=(), rounds=3, watch=14):
+    """One pass over a story agent: arm the trapset plus the example's own functions, keep
+    call and return, and keep the printed transcript alongside the frames."""
+    PORTFILE.unlink(missing_ok=True)
+    py = sys.executable
+    env = {**os.environ, "ARM_WAIT": "9", "ROUNDS": str(rounds), "HOLD": str(watch + 6),
+           "AITRAP_RECENT_OBJECTS": "6000"}
+    if fixed_env:
+        env[fixed_env] = "1"
+    proc = subprocess.Popen([py, "-m", "aitrap.cli", "run", "--", py, str(ROOT / script)],
+                            env=env, cwd=ROOT, stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL, text=True)
+    try:
+        for _ in range(60):
+            if PORTFILE.exists():
+                break
+            time.sleep(0.5)
+        else:
+            sys.exit(f"{script}: target never announced a port")
+        port = PORTFILE.read_text().strip()
+        time.sleep(1.5)
+        api(port, "POST", "/trap", {"trapset": trapset, "events": ["call", "return"]})
+        for sym in symbols:
+            api(port, "POST", "/trap", {"symbol": sym, "events": ["call", "return"]})
+        time.sleep(watch)
+        events, cursor = [], 0
+        while True:
+            page = api(port, "GET", f"/poll?cursor={cursor}&limit=300")
+            batch = page.get("events", [])
+            events += batch
+            cursor = page.get("nextCursor", cursor)
+            if not batch or not page.get("hasMore"):
+                break
+    finally:
+        proc.terminate()
+        out = proc.stdout.read() if proc.stdout else ""
+    transcript = [l.strip() for l in out.splitlines() if l.startswith("  [")]
+    return events, transcript[:4]
+
+
+def record_stories(path=ROOT / "scripts" / "video" / "stories.json"):
+    """Both states of each story agent, trimmed to what the video scenes show."""
+    stories = []
+    for name, trapset, script, fixed_env, symbols in STORIES:
+        state = {}
+        for label, env in (("broken", None), ("fixed", fixed_env)):
+            events, transcript = record_story(name, trapset, script, env, symbols)
+            state[label] = {"frames": [{"kind": e["kind"], "symbol": e["symbol"],
+                                        "locals": {k: v for k, v in (e.get("locals") or {}).items()
+                                                   if v.get("isPrimitive")},
+                                        "returned": e.get("returned")}
+                                       for e in events],
+                            "transcript": transcript}
+            print(f"{name + '/' + label:>30}  {len(events)} events  {len(transcript)} spoken lines")
+        stories.append({"name": name, "trapset": trapset, "script": script, **state})
+    path.write_text(json.dumps({"stories": stories}))
+    print(f"{'stories':>18}  {len(stories)} -> {path.relative_to(ROOT)}")
+
+
 # Panel copy for the video's adapter scene. The counts and frames under it are read back
 # out of the recordings, never typed here.
 VIDEO_PANELS = [
@@ -141,3 +211,4 @@ if __name__ == "__main__":
         record(name, trapset, script)
     if len(runs) == len(RUNS):
         build_video_data()
+        record_stories()

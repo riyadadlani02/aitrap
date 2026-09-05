@@ -1,0 +1,21 @@
+{
+  "package": "livekit-agents",
+  "verified_against": "livekit-agents 1.6.6",
+  "hooks": {
+    "on-tool-call": [
+      {"symbol": "livekit.agents.voice.tool_executor._ToolExecutor.execute"},
+      {"symbol": "livekit.agents.voice.generation._execute_tools_task"}
+    ],
+    "on-llm-request": [
+      {"symbol": "livekit.agents.llm.llm.LLM.chat"},
+      {"symbol": "livekit.plugins.openai.llm.LLM.chat"}
+    ],
+    "on-handoff": [
+      {"symbol": "livekit.agents.voice.agent_session.AgentSession.update_agent"},
+      {"symbol": "livekit.agents.voice.agent_session.AgentSession._update_activity"}
+    ],
+    "on-user-turn": [
+      {"symbol": "livekit.agents.voice.agent.Agent.on_user_turn_completed"}
+    ]
+  }
+}

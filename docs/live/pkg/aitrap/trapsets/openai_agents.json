@@ -1,0 +1,22 @@
+{
+  "package": "openai-agents",
+  "verified_against": "openai-agents 0.22.0 — every symbol observed firing",
+  "hooks": {
+    "on-agent-run": [
+      {"symbol": "agents.run.Runner.run"},
+      {"symbol": "agents.run.AgentRunner.run"}
+    ],
+    "on-turn": [
+      {"symbol": "agents.run_internal.run_loop.run_single_turn"}
+    ],
+    "on-llm-request": [
+      {"symbol": "agents.run_internal.run_loop.get_new_response"}
+    ],
+    "on-tool-call": [
+      {"symbol": "agents.run_internal.tool_execution.execute_function_tool_calls"}
+    ],
+    "on-handoff": [
+      {"symbol": "agents.run_internal.turn_resolution.execute_handoffs"}
+    ]
+  }
+}

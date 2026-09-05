@@ -114,6 +114,7 @@
 
 <nav><div class="wrap">
   <span class="logo">aitrap <em>runtime traps</em></span>
+  <a href="live/">Run it live</a>
   <a href="#pause">Why</a>
   <a href="#video">Video</a>
   <a href="#phone">Demos</a>
@@ -129,10 +130,25 @@
      you were chasing is gone. <b>aitrap traps capture and continue</b> — real values out of a
      live process that never pauses.</p>
   <div class="cta">
-    <a class="btn solid" href="#video">Watch the demo</a>
-    <a class="btn ghost" href="demo-phone/">Tap the phone demo</a>
+    <a class="btn solid" href="live/">Run it in your browser</a>
+    <a class="btn ghost" href="#video">Watch the demo</a>
+    <a class="btn ghost" href="#install">Install it</a>
   </div>
 </div></header>
+
+<section id="live"><div class="wrap">
+  <h2>Run it, right here, on a real Python process</h2>
+  <p class="sub">Pyodide is CPython 3.13 compiled to WebAssembly, and <code>sys.monitoring</code>
+     came with it &mdash; so the engine that runs on your laptop runs unmodified in a browser tab.
+     Arm a trap on the checkout pricing code, apply the coupon, read the values that come back.
+     Nothing is recorded and nothing is served: the frames are captured microseconds earlier, in
+     your own tab.</p>
+  <a class="btn solid" href="live/">Open the live console</a>
+  <p class="demo-hint">Tick <b>apply the fix</b> and press apply again: the same armed trap
+     re-reads the repaired run, <code>base_amount</code> goes from <code>565.64</code> to
+     <code>628.49</code>, and the total falls from $638.72 to $511.44. That is the whole loop,
+     with no install and no server.</p>
+</div></section>
 
 <section id="pause"><div class="wrap">
   <h2>What a breakpoint does to an agent</h2>
@@ -165,12 +181,14 @@
 </div></section>
 
 <section id="video"><div class="wrap">
-  <h2>An agent finds the bug, fixes it, and proves it &mdash; twice</h2>
-  <p class="sub">Two and a half minutes, two bugs. A checkout screen rejects a coupon it should
-     accept: the agent attaches to the running backend, arms traps, triggers the failing request,
-     reads the values, writes the two-line fix and re-runs the same trap &mdash; $638.72 down to
-     $511.44, with the app serving throughout. Then the same loop on a live LiveKit call that
-     files a note against the wrong person. Every screen and every frame is a real capture.</p>
+  <h2>An agent finds the bug, fixes it, and proves it &mdash; five times</h2>
+  <p class="sub">A checkout screen rejects a coupon it should accept: the agent attaches to the
+     running backend, arms traps, triggers the failing request, reads the values, writes the
+     two-line fix and re-runs the same trap &mdash; $638.72 down to $511.44, with the app serving
+     throughout. Then the same loop on a LiveKit call filed against the wrong person, a LangGraph
+     agent that answers with filler, an OpenAI Agents handoff that loses the customer's price cap,
+     and a Pydantic AI refund that pays out a hundred times over. Every screen and every frame is
+     a real capture.</p>
   <div class="video-frame">
     <video controls preload="none" poster="aitrap-demo-poster.jpg"
            playsinline width="1920" height="1080">
@@ -204,7 +222,7 @@
 
 <section id="demo"><div class="wrap">
   <h2>Seven agents, one console</h2>
-  <p class="sub">The real console replaying real recordings &mdash; each captured by running an
+  <p class="sub">Recorded runs this time, not live ones &mdash; the real console replaying real captures &mdash; each captured by running an
      example from the repo under aitrap and arming that framework's trapset by name. Every adapter
      is here through both doors, sync and async, because they do not fire the same symbols. Pick a
      run from the menu at the top right, click any row for its locals, then click a non-primitive
@@ -230,6 +248,31 @@
     <div class="fig ok"><b>0</b><span>times the process pauses</span></div>
     <div class="fig"><b>0</b><span>dependencies outside the standard library</span></div>
   </div>
+</div></section>
+
+<section id="install"><div class="wrap">
+  <h2>Install it</h2>
+  <p class="sub">Python 3.12 or newer &mdash; the design rests on <code>sys.monitoring</code>,
+     which does not exist before that. No dependencies outside the standard library.</p>
+  <div class="steps">
+    <div class="step"><div>
+      <h3>From the repository</h3>
+      <p>Works today. <code>uv pip install</code> takes the same URL.</p>
+      <code>pip install git+https://github.com/riyadadlani02/aitrap</code>
+    </div></div>
+    <div class="step"><div>
+      <h3>With the MCP server, so your coding agent can drive it</h3>
+      <p>Adds the <code>aitrap-mcp</code> entry point alongside the CLI.</p>
+      <code>pip install "aitrap[mcp] @ git+https://github.com/riyadadlani02/aitrap"</code>
+    </div></div>
+    <div class="step"><div>
+      <h3>Or install nothing at all</h3>
+      <p>The live console runs the real engine in your browser, on WebAssembly.</p>
+      <code><a href="live/" style="color:inherit">riyadadlani02.github.io/aitrap/live/</a></code>
+    </div></div>
+  </div>
+  <p class="demo-hint">Not on PyPI yet &mdash; the release workflow publishes on a
+     <code>v*</code> tag once the name is claimed there.</p>
 </div></section>
 
 <section id="use"><div class="wrap">
