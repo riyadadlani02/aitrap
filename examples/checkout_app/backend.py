@@ -10,8 +10,13 @@ that qualifies is told it doesn't. You cannot see that in the source; the two am
 only differ at runtime.
 """
 import json
+import os
 import pathlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+# The demo ships broken on purpose. CHECKOUT_FIXED=1 applies the two-line repair so the
+# before and after can both be recorded from this one file.
+FIXED = os.environ.get("CHECKOUT_FIXED") == "1"
 
 HERE = pathlib.Path(__file__).parent
 
@@ -62,12 +67,14 @@ class OrderPricingPipeline:
 
         # The bug: eligibility is meant to be judged on what the customer spent
         # (gross_subtotal), but the post-discount figure is passed instead.
+        promo_base = gross_subtotal if FIXED else net_subtotal
         promo_discount, promo_error = self.promo_engine.evaluate_promo(
-            coupon, net_subtotal, items) if coupon else (0.0, None)
+            coupon, promo_base, items) if coupon else (0.0, None)
 
         taxable = round(net_subtotal - promo_discount, 2)
         tax = round(taxable * 0.085, 2)
-        shipping_fee = self.shipping.calculate_shipping(net_subtotal, express)
+        shipping_fee = self.shipping.calculate_shipping(
+            gross_subtotal if FIXED else net_subtotal, express)
         total = round(taxable + tax + shipping_fee, 2)
         return {
             "items": items,
