@@ -29,6 +29,15 @@
   .note{color:var(--faint);font-size:13.5px;margin-top:10px}
 
   .stage{display:grid;grid-template-columns:376px 1fr;gap:28px;padding-bottom:34px;align-items:start}
+  .fixbar{display:flex;align-items:center;gap:16px;margin:0 0 18px;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .seg button{background:transparent;border:0;border-right:1px solid var(--line);
+    color:var(--dim);font:500 14px/1 var(--sans);padding:10px 16px;cursor:pointer}
+  .seg button:last-child{border-right:0}
+  .seg button:hover{color:var(--text)}
+  .seg button[aria-pressed=true]{background:var(--live);color:#0e1219}
+  .seg button:focus-visible{outline:2px solid var(--live);outline-offset:2px}
+  .segnote{color:var(--faint);font-size:13.5px}
 
   /* phone */
   .phone{border:10px solid #242b39;border-radius:42px;background:#f2f3f7;overflow:hidden;
@@ -112,6 +121,7 @@
 <nav><div class="wrap">
   <span class="logo">aitrap</span>
   <a href="../">Overview</a>
+  <a href="../demo-voice/">Voice demo</a>
   <a href="../demo/">Console demo</a>
   <span class="sp"></span>
   <a href="https://github.com/riyadadlani02/aitrap">GitHub</a>
@@ -127,6 +137,14 @@
        <code>examples/checkout_app/backend.py</code> under aitrap and driving it from the phone.
        The frames are real captures, not illustrations.</p>
   </header>
+
+  <div class="fixbar">
+    <div class="seg" role="group" aria-label="Which version of the backend">
+      <button id="segBroken" aria-pressed="true">Before the fix</button>
+      <button id="segFixed" aria-pressed="false">After the fix</button>
+    </div>
+    <span class="segnote" id="segnote"></span>
+  </div>
 
   <div class="stage">
     <div class="phone">
@@ -174,14 +192,10 @@
   </div>
 
   <div class="tell">
-    <h3>What the frames give away</h3>
-    <p>Two functions in the same request disagree about what the customer spent. The tier discount
-       sees the real subtotal; the coupon check is handed the figure <em>after</em> that discount
-       came off, so a $628.49 cart is judged against $565.64 and told it hasn't reached $600.
-       Shipping is fed the same wrong number, so free-delivery-over-$600 fails too.</p>
+    <h3 id="tellHead">What the frames give away</h3>
+    <p id="tellBody"></p>
     <div class="pair" id="tell"></div>
-    <p style="margin-top:14px">The source reads fine — <code>evaluate_promo(coupon, net_subtotal, items)</code>
-       is a plausible line. Only the runtime values show it is the wrong argument.</p>
+    <p style="margin-top:14px" id="tellFoot"></p>
   </div>
 </div>
 
@@ -193,9 +207,11 @@
 const $ = id => document.getElementById(id);
 const money = n => '$' + Number(n).toFixed(2);
 const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
-let DATA = null, coupon = 'TECH15', express = 1;
+let DATA = null, coupon = 'TECH15', express = 1, fixed = false;
 
-const HOT = {'base_amount': 'hot', 'subtotal': 'hot', 'gross_amount': 'warm'};
+const BROKEN_PALETTE = {'base_amount': 'hot', 'subtotal': 'hot', 'gross_amount': 'warm'};
+const FIXED_PALETTE = {'base_amount': 'warm', 'subtotal': 'warm', 'gross_amount': 'warm'};
+let HOT = BROKEN_PALETTE;
 
 function shortSym(s){ return s.split('.').slice(-2).join('.'); }
 
@@ -216,7 +232,14 @@ function renderValue(name, v){
 }
 
 function paint(){
-  const st = DATA.states[`${coupon}|${express}`];
+  HOT = fixed ? FIXED_PALETTE : BROKEN_PALETTE;
+  const source = fixed ? DATA.fixedStates : DATA.states;
+  const st = source[`${coupon}|${express}`];
+  $('segBroken').setAttribute('aria-pressed', String(!fixed));
+  $('segFixed').setAttribute('aria-pressed', String(fixed));
+  $('segnote').textContent = fixed
+    ? 'backend running with the two-argument repair applied'
+    : 'backend running with the bug, as it ships in the repo';
   const r = st.response;
 
   $('code').value = coupon;
@@ -260,18 +283,38 @@ function paint(){
   const gross = find('compute_discount', 'gross_amount');
   const base = find('evaluate_promo', 'base_amount');
   const ship = find('calculate_shipping', 'subtotal');
+  const vcls = fixed ? 'warm' : 'hot';
   $('tell').innerHTML = [
     ['compute_discount saw', gross, 'warm'],
-    ['evaluate_promo was given', base, 'hot'],
-    ['calculate_shipping was given', ship, 'hot'],
+    ['evaluate_promo was given', base, vcls],
+    ['calculate_shipping was given', ship, vcls],
   ].filter(([, v]) => v != null)
    .map(([label, v, cls]) => `<span>${label}</span><span class="${cls}">${v}</span>`).join('');
+
+  document.querySelector('.tell').style.borderLeftColor = fixed ? 'var(--live)' : 'var(--bad)';
+  $('tellHead').textContent = fixed
+    ? 'What the frames confirm' : 'What the frames give away';
+  $('tellBody').innerHTML = fixed
+    ? `Every function in the request now sees the same figure. The coupon is judged on what the
+       customer actually spent, so it applies, and free delivery applies with it. The proof is the
+       same trap that found the bug — re-armed and re-read, no new tooling.`
+    : `Two functions in the same request disagree about what the customer spent. The tier discount
+       sees the real subtotal; the coupon check is handed the figure <em>after</em> that discount
+       came off, so a $628.49 cart is judged against $565.64 and told it hasn't reached $600.
+       Shipping is fed the same wrong number, so free-delivery-over-$600 fails too.`;
+  $('tellFoot').innerHTML = fixed
+    ? `The repair is two arguments: <code>net_subtotal</code> to <code>gross_subtotal</code>, in
+       both calls. Run the backend with <code>CHECKOUT_FIXED=1</code> to reproduce this side.`
+    : `The source reads fine — <code>evaluate_promo(coupon, net_subtotal, items)</code> is a
+       plausible line. Only the runtime values show it is the wrong argument.`;
 }
 
 $('apply').onclick = paint;
 $('expressRow').onclick = () => { express = express ? 0 : 1; paint(); };
 document.querySelectorAll('.chip').forEach(c =>
   c.onclick = () => { coupon = c.dataset.code; paint(); });
+$('segBroken').onclick = () => { fixed = false; paint(); };
+$('segFixed').onclick = () => { fixed = true; paint(); };
 
 fetch('timeline.json').then(r => r.json()).then(d => { DATA = d; paint(); });
 </script>

@@ -116,7 +116,7 @@
   <span class="logo">aitrap <em>runtime traps</em></span>
   <a href="#pause">Why</a>
   <a href="#video">Video</a>
-  <a href="#demo">Demos</a>
+  <a href="#phone">Demos</a>
   <a href="#use">Use it</a>
   <span class="sp"></span>
   <a href="https://github.com/riyadadlani02/aitrap">GitHub</a>
@@ -190,6 +190,17 @@
      <code>565.64</code>. The source line reads fine; only the live values give it away.</p>
 </div></section>
 
+<section id="voice"><div class="wrap">
+  <h2>Same loop, on a voice agent</h2>
+  <p class="sub">A LiveKit agent takes a call about somebody else's account. Nothing errors, the
+     caller is thanked, and the wrong account is attached — because one matcher only accepted a
+     bare word and quietly defaulted to <code>self</code>. Toggle before and after the fix.</p>
+  <a class="btn solid" href="demo-voice/">Open the voice demo</a>
+  <p class="demo-hint">The caller said <code>"for my mother"</code>.
+     <code>normalise_relationship</code> returned <code>"self"</code>, and every step after it was
+     confidently wrong. The transcript reads perfectly.</p>
+</div></section>
+
 <section id="demo"><div class="wrap">
   <h2>A recorded agent, replaying</h2>
   <p class="sub">This is the real console with a real recording — captured by running the toy
@@ -197,7 +208,8 @@
      non-primitive value to expand the object behind it.</p>
   <div class="demo-frame"><iframe src="demo/" title="aitrap console replaying a recorded session"
        loading="lazy"></iframe></div>
-  <p class="demo-hint">Look for <code>apply_discount</code>: it receives
+  <p class="demo-hint">There's a <strong>before / after the fix</strong> toggle at the top — the
+     same traps, re-read against the repaired backend. Look for <code>apply_discount</code>: it receives
      <code>base_amount 565.64</code> while the coupon it is checking wants
      <code>min_spend 600.0</code>. The discount silently never applies. That's the bug, visible
      only from live values — the source looks fine. Note <code>customer_email</code> comes back

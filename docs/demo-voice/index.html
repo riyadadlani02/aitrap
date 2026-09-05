@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aitrap — a voice agent on the wrong account</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161f; --ink2:#171d29; --line:#28313f; --text:#d7dde8; --dim:#79839a;
+    --faint:#4d5768; --live:#7fd1c1; --call:#e0a33e; --return:#3fb8a0; --bad:#e0656f;
+    --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font:15px/1.6 var(--sans)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  a{color:var(--live)}
+  nav{border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:22px;align-items:center;padding:15px 24px;font-size:14px}
+  nav .logo{font-weight:600}
+  nav a{color:var(--dim);text-decoration:none}
+  nav a:hover{color:var(--text)}
+  nav .sp{margin-left:auto}
+
+  header.top{padding:44px 0 26px}
+  h1{font:600 clamp(26px,3.6vw,38px)/1.15 var(--sans);letter-spacing:-.025em;margin:0;max-width:24ch}
+  header.top p{color:var(--dim);max-width:66ch;margin:14px 0 0}
+  .note{color:var(--faint);font-size:13.5px;margin-top:10px}
+
+  .fixbar{display:flex;align-items:center;gap:16px;margin:0 0 18px;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .seg button{background:transparent;border:0;border-right:1px solid var(--line);color:var(--dim);
+    font:500 14px/1 var(--sans);padding:10px 16px;cursor:pointer}
+  .seg button:last-child{border-right:0}
+  .seg button:hover{color:var(--text)}
+  .seg button[aria-pressed=true]{background:var(--live);color:#0e1219}
+  .seg button:focus-visible{outline:2px solid var(--live);outline-offset:2px}
+  .segnote{color:var(--faint);font-size:13.5px}
+
+  .stage{display:grid;grid-template-columns:376px 1fr;gap:28px;padding-bottom:30px;align-items:start}
+
+  /* phone: a call in progress */
+  .phone{border:10px solid #242b39;border-radius:42px;background:#0f1420;overflow:hidden;
+         box-shadow:0 20px 60px rgba(0,0,0,.45);position:relative}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:26px;
+         background:#242b39;border-radius:0 0 16px 16px;z-index:3}
+  .screen{height:600px;background:#0f1420;color:#e8ecf3;padding:44px 18px 18px;
+          font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+          display:flex;flex-direction:column}
+  .callhd{text-align:center;padding-bottom:14px;border-bottom:1px solid #222c3c}
+  .callhd .who{font-size:17px;font-weight:600}
+  .callhd .st{color:#7d8798;font-size:12.5px;margin-top:3px}
+  .wave{display:flex;gap:3px;justify-content:center;align-items:flex-end;height:22px;margin-top:10px}
+  .wave i{width:3px;background:#3fb8a0;border-radius:2px;display:block;opacity:.85}
+  .turns{flex:1;overflow:hidden;padding:14px 0;display:flex;flex-direction:column;gap:10px}
+  .b{max-width:82%;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.45}
+  .b.caller{background:#1c2433;align-self:flex-start;border-bottom-left-radius:5px}
+  .b.agent{background:#25407a;align-self:flex-end;border-bottom-right-radius:5px}
+  .b .lbl{display:block;font-size:10.5px;color:#8b95a8;margin-bottom:3px}
+  .b.agent .lbl{color:#a8bde8}
+  .rec{border:1px solid #222c3c;border-radius:11px;padding:12px 13px;background:#141b28}
+  .rec h5{margin:0 0 9px;font-size:11px;color:#7d8798;font-weight:600}
+  .rec .row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13px}
+  .rec .row span:first-child{color:#7d8798}
+  .rec .row b{font-weight:600;font-family:var(--mono);font-size:12.5px}
+  .rec .row b.wrong{color:#ff8b95}
+  .rec .row b.right{color:#5fd3b6}
+  .flag{margin-top:9px;font-size:11.5px;padding:7px 10px;border-radius:7px}
+  .flag.bad{background:rgba(224,101,111,.14);color:#ff8b95}
+  .flag.ok{background:rgba(127,209,193,.14);color:#5fd3b6}
+
+  /* console */
+  .console{border:1px solid var(--line);border-radius:6px;background:var(--ink2);overflow:hidden}
+  .console .bar{padding:11px 16px;border-bottom:1px solid var(--line);display:flex;gap:20px;
+                align-items:center;font:400 12.5px/1 var(--mono);color:var(--dim)}
+  .console .bar b{color:var(--text);font-weight:500}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block;
+       margin-right:7px}
+  .fr{border-bottom:1px solid var(--line);padding:10px 16px}
+  .fr:last-child{border-bottom:0}
+  .fr-h{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:baseline}
+  .kind{font:500 11px/1.4 var(--mono);color:var(--call)}
+  .kind.return{color:var(--return)}
+  .sym{font:400 13.5px/1.4 var(--mono);word-break:break-all}
+  .where{font:400 11.5px/1.4 var(--mono);color:var(--faint);white-space:nowrap}
+  .kv{display:grid;grid-template-columns:minmax(100px,auto) 1fr;gap:2px 16px;margin:7px 0 0 68px;
+      font:400 12.5px/1.6 var(--mono)}
+  .k{color:var(--dim)} .v{color:var(--text);word-break:break-all}
+  .v .t{color:var(--faint)}
+  .hot{background:rgba(224,101,111,.18);border-radius:3px;padding:1px 6px;color:#ffb3b9}
+  .warm{background:rgba(127,209,193,.16);border-radius:3px;padding:1px 6px;color:var(--live)}
+
+  .tell{border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:5px;
+        background:var(--ink2);padding:20px 22px;margin:0 0 46px}
+  .tell h3{margin:0 0 8px;font:600 17px/1.3 var(--sans)}
+  .tell p{margin:0 0 12px;color:var(--dim);max-width:78ch}
+  .tell code{font-family:var(--mono);color:var(--text);font-size:13.5px}
+  .tell .pair{display:grid;grid-template-columns:auto 1fr;gap:5px 16px;font:400 13px/1.7 var(--mono);
+              margin-top:10px}
+  .tell .pair span:first-child{color:var(--dim)}
+  footer{padding:34px 0 60px;color:var(--faint);font-size:13.5px;border-top:1px solid var(--line)}
+  @media (max-width:900px){.stage{grid-template-columns:1fr}.phone{max-width:376px}}
+</style>
+
+<nav><div class="wrap">
+  <span class="logo">aitrap</span>
+  <a href="../">Overview</a>
+  <a href="../demo-phone/">Checkout demo</a>
+  <a href="../demo/">Console demo</a>
+  <span class="sp"></span>
+  <a href="https://github.com/riyadadlani02/aitrap">GitHub</a>
+</div></nav>
+
+<div class="wrap">
+  <header class="top">
+    <h1>The call sounded fine. It was filed against the wrong person.</h1>
+    <p>A LiveKit voice agent takes a call about somebody else's account. Nothing errors, the
+       caller is thanked, and the wrong account is attached. The frames on the right are what
+       the trap captured from that turn — while the call carried on.</p>
+    <p class="note">Recorded by running <code>examples/voice_agent.py</code> under aitrap. It is a
+       real <code>AgentSession</code> with a scripted model, so it needs no API key and no audio.</p>
+  </header>
+
+  <div class="fixbar">
+    <div class="seg" role="group" aria-label="Which version of the agent">
+      <button id="segBroken" aria-pressed="true">Before the fix</button>
+      <button id="segFixed" aria-pressed="false">After the fix</button>
+    </div>
+    <span class="segnote" id="segnote"></span>
+  </div>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="callhd">
+          <div class="who">Support line</div>
+          <div class="st">connected · 00:14</div>
+          <div class="wave" id="wave"></div>
+        </div>
+        <div class="turns">
+          <div class="b caller"><span class="lbl">Caller</span>Hi, I'm calling about my mother's
+            account.</div>
+          <div class="b agent"><span class="lbl">Agent</span>Thanks — I have that on the account
+            now.</div>
+        </div>
+        <div class="rec">
+          <h5>Attached to this call</h5>
+          <div class="row"><span>Relationship</span><b id="relv"></b></div>
+          <div class="row"><span>Account</span><b id="accv"></b></div>
+          <div class="flag" id="flag"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="console">
+      <div class="bar"><span><i class="dot"></i>call in progress</span>
+        <span><b id="nf">0</b> frames captured</span><span><b>0</b> dropped</span>
+        <span><b>0</b> pauses</span></div>
+      <div id="frames"></div>
+    </div>
+  </div>
+
+  <div class="tell">
+    <h3 id="tellHead"></h3>
+    <p id="tellBody"></p>
+    <div class="pair" id="tell"></div>
+    <p style="margin-top:14px" id="tellFoot"></p>
+  </div>
+</div>
+
+<footer><div class="wrap">
+  Recorded from a real LiveKit session ·
+  <a href="https://github.com/riyadadlani02/aitrap">github.com/riyadadlani02/aitrap</a>
+</div></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+let DATA = null, fixed = false;
+
+$('wave').innerHTML = [9,15,22,13,19,8,17,21,11,16,7,14]
+  .map(h => `<i style="height:${h}px"></i>`).join('');
+
+const HOTKEYS = ['spoken', 'relationship'];
+
+function renderValue(name, v, hot){
+  if (v.isPrimitive){
+    const cls = HOTKEYS.includes(name) ? (hot ? 'hot' : 'warm') : '';
+    const txt = esc(JSON.stringify(v.value));
+    return `<span class="v">${cls ? `<span class="${cls}">${txt}</span>` : txt}
+      <span class="t">${esc(v.type)}</span></span>`;
+  }
+  return `<span class="v"><span class="t">${esc(v.type)}</span></span>`;
+}
+
+function shortSym(s){ return s.split('.').slice(-2).join('.'); }
+
+function paint(){
+  const st = fixed ? DATA.fixed : DATA.broken;
+  const hot = !fixed;
+  $('segBroken').setAttribute('aria-pressed', String(!fixed));
+  $('segFixed').setAttribute('aria-pressed', String(fixed));
+  $('segnote').textContent = fixed
+    ? 'agent running with the repaired matcher'
+    : 'agent running with the bug, as it ships in the repo';
+
+  const out = (st.transcript.find(l => l.startsWith('[out ]')) || '');
+  const rel = (out.match(/relationship=(\S+)/) || [, '—'])[1];
+  const acc = (out.match(/account=(.+)$/) || [, '—'])[1];
+  $('relv').textContent = rel;
+  $('relv').className = fixed ? 'right' : 'wrong';
+  $('accv').textContent = acc;
+  $('accv').className = fixed ? 'right' : 'wrong';
+  $('flag').className = 'flag ' + (fixed ? 'ok' : 'bad');
+  $('flag').textContent = fixed
+    ? "Matches what the caller said — the mother's account is attached."
+    : "The caller said “my mother”. This is the caller's own account.";
+
+  const evs = st.events.filter(e => e.symbol.includes('voice_agent') || e.kind === 'call');
+  $('nf').textContent = st.events.length;
+  $('frames').innerHTML = evs.map(ev => {
+    const rows = Object.entries(ev.locals || {})
+      .filter(([, v]) => v.isPrimitive || v.objectId)
+      .map(([k, v]) => `<div class="k">${esc(k)}</div>${renderValue(k, v, hot)}`).join('');
+    const ret = ev.returned
+      ? `<div class="k">returns</div>${renderValue('relationship', ev.returned, hot)}` : '';
+    return `<div class="fr">
+      <div class="fr-h"><span class="kind ${ev.kind}">${ev.kind}</span>
+        <span class="sym">${esc(shortSym(ev.symbol))}</span>
+        <span class="where">${esc((ev.where || '').split('/').pop())}</span></div>
+      ${rows || ret ? `<div class="kv">${rows}${ret}</div>` : ''}</div>`;
+  }).join('');
+
+  const norm = st.events.find(e => e.kind === 'return' && e.symbol.endsWith('normalise_relationship'));
+  const spoken = st.events.find(e => e.kind === 'call' && e.symbol.endsWith('normalise_relationship'));
+  const resolved = st.events.find(e => e.kind === 'return' && e.symbol.endsWith('resolve_account_holder'));
+  $('tell').innerHTML = [
+    ['the caller said', spoken && spoken.locals.spoken.value, 'warm'],
+    ['normalise_relationship returned', norm && norm.returned.value, fixed ? 'warm' : 'hot'],
+    ['the account it resolved to', resolved && resolved.returned.value, fixed ? 'warm' : 'hot'],
+  ].filter(([, v]) => v != null)
+   .map(([l, v, c]) => `<span>${l}</span><span class="${c}">${esc(String(v))}</span>`).join('');
+
+  document.querySelector('.tell').style.borderLeftColor = fixed ? 'var(--live)' : 'var(--bad)';
+  $('tellHead').textContent = fixed ? 'What the frames confirm' : 'What the frames give away';
+  $('tellBody').innerHTML = fixed
+    ? `The matcher now looks for a known relationship anywhere in what the caller said, so
+       <code>"for my mother"</code> resolves to <code>mother</code> and the call attaches to her
+       account. Same trap, same two frames — that is the whole verification.`
+    : `The caller was clear. The matcher only accepted a single bare word, so
+       <code>"for my mother"</code> matched nothing and fell through to the default of
+       <code>self</code>. From there every downstream step is confidently wrong: the account
+       resolves to the caller, the agent confirms it aloud, and the call ends looking successful.`;
+  $('tellFoot').innerHTML = fixed
+    ? `Run the agent with <code>VOICE_FIXED=1</code> to reproduce this side.`
+    : `Nothing raised, nothing logged, and the transcript reads perfectly. A test would need to
+       already suspect this. The trap just shows the argument.`;
+}
+
+$('segBroken').onclick = () => { fixed = false; paint(); };
+$('segFixed').onclick = () => { fixed = true; paint(); };
+fetch('timeline.json').then(r => r.json()).then(d => { DATA = d; paint(); });
+</script>
+</html>

@@ -50,6 +50,17 @@ A time axis that keeps advancing whether or not events arrive (the target is run
 time), the armed traps with hit counts, and the event stream. Click an event for its locals; click
 a non-primitive to expand it from the live process.
 
+## Demos
+
+| | |
+|---|---|
+| [Checkout](https://riyadadlani02.github.io/aitrap/demo-phone/) | A coupon silently rejected because two functions disagree about the subtotal. Before/after the fix. |
+| [Voice agent](https://riyadadlani02.github.io/aitrap/demo-voice/) | A LiveKit call filed against the wrong person because a matcher defaulted to `self`. Before/after the fix. |
+| [Console](https://riyadadlani02.github.io/aitrap/demo/) | The live console replaying a recorded run. |
+
+Every state in them is a real capture from `examples/`, in both the broken and repaired form —
+`CHECKOUT_FIXED=1` and `VOICE_FIXED=1` apply the respective repairs.
+
 ## Trap sets
 
 Semantic hooks instead of line numbers. Adapters are JSON data, not code.
