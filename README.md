@@ -1,6 +1,7 @@
 # aitrap
 
-**[Site and live demo →](https://riyadadlani02.github.io/aitrap/)**
+**[Site and live demo →](https://riyadadlani02.github.io/aitrap/)** ·
+**[90-second video →](https://riyadadlani02.github.io/aitrap/#video)**
 
 Non-stopping runtime traps for live AI agent processes — so an AI coding agent can read **real
 values** out of a running agent without freezing the agent it's debugging.

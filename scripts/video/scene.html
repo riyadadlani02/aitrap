@@ -1,0 +1,266 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>aitrap film</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161f; --ink2:#171d29; --line:#28313f; --text:#d7dde8; --dim:#79839a;
+    --faint:#4d5768; --live:#7fd1c1; --call:#e0a33e; --ret:#3fb8a0; --bad:#e0656f;
+    --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1280px;height:720px;overflow:hidden;background:var(--ink);color:var(--text);
+            font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .scene{position:absolute;inset:0;padding:64px 76px;display:none;flex-direction:column;
+         justify-content:center}
+  .scene.on{display:flex}
+  .cap{position:absolute;left:76px;bottom:30px;font:500 15px/1 var(--mono);color:var(--faint);
+       letter-spacing:.02em}
+  .chip{position:absolute;left:76px;bottom:46px;background:var(--live);color:#0e1219;
+        font:600 16px/1 var(--sans);padding:9px 15px;border-radius:4px}
+
+  h1{font:700 62px/1.06 var(--sans);letter-spacing:-.035em}
+  h1 .d{color:var(--dim);font-weight:400}
+  h2{font:600 40px/1.15 var(--sans);letter-spacing:-.03em;margin-bottom:14px}
+  .sub{font:400 21px/1.5 var(--sans);color:var(--dim);max-width:64ch}
+
+  /* clock scene */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px}
+  .col{border:1px solid var(--line);border-radius:7px;background:var(--ink2);padding:22px 24px}
+  .col h3{font:600 17px/1 var(--sans);margin-bottom:3px}
+  .col .who{font:400 13px/1 var(--mono);color:var(--faint);margin-bottom:18px}
+  .col.bad h3{color:var(--bad)} .col.good h3{color:var(--live)}
+  .ev{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:7px 0;
+      font:400 16px/1.45 var(--mono);color:var(--dim)}
+  .ev i{font-style:normal;color:var(--faint);text-align:right}
+  .ev.hot{color:var(--bad)} .ev.ok{color:var(--live)} .ev.on{color:var(--text)}
+
+  /* terminal */
+  .term{border:1px solid var(--line);border-radius:7px;background:#0d1119;overflow:hidden;
+        margin-top:26px}
+  .term .tb{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;gap:7px}
+  .term .tb i{width:11px;height:11px;border-radius:50%;background:#2b3444;display:block}
+  .term pre{padding:20px 22px;font:400 17px/1.62 var(--mono);white-space:pre-wrap;
+            min-height:376px;color:var(--text)}
+  .p{color:var(--live)} .o{color:var(--dim)} .k{color:var(--call)} .g{color:var(--ret)}
+  .cur{background:var(--live);color:#0d1119}
+
+  /* console frames */
+  .con{border:1px solid var(--line);border-radius:7px;background:var(--ink2);overflow:hidden;
+       margin-top:22px;max-height:432px}
+  .con .bar{padding:11px 18px;border-bottom:1px solid var(--line);display:flex;gap:24px;
+            font:400 14px/1 var(--mono);color:var(--dim)}
+  .con .bar b{color:var(--text);font-weight:500}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--live);display:inline-block;
+       margin-right:8px}
+  .fr{border-bottom:1px solid var(--line);padding:10px 18px}
+  .fr-h{display:grid;grid-template-columns:58px 1fr auto;gap:14px;align-items:baseline}
+  .kd{font:500 12px/1.4 var(--mono);color:var(--call)}
+  .kd.return{color:var(--ret)}
+  .sy{font:400 16px/1.4 var(--mono)}
+  .wh{font:400 13px/1.4 var(--mono);color:var(--faint)}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:2px 16px;margin:6px 0 0 72px;
+      font:400 14px/1.5 var(--mono);max-width:1000px}
+  .kk{color:var(--dim)} .vv{color:var(--text);overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap}
+  .vv .t{color:var(--faint)}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;margin-top:26px;font-size:20px}
+  td,th{text-align:left;padding:15px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--faint);font:400 14px/1 var(--mono);font-weight:400}
+  td.n{font-family:var(--mono);color:var(--live);white-space:nowrap}
+  td code{font-family:var(--mono);font-size:18px}
+
+  /* figures */
+  .figs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:32px;
+        background:var(--line);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .fig{background:var(--ink2);padding:26px 22px}
+  .fig b{display:block;font:500 40px/1 var(--mono);letter-spacing:-.02em}
+  .fig.ok b{color:var(--live)}
+  .fig span{display:block;color:var(--dim);font-size:15px;margin-top:9px;line-height:1.35}
+
+  /* outro */
+  .outro{align-items:center;text-align:center;justify-content:center}
+  .outro .mark{font:700 60px/1 var(--sans);letter-spacing:-.035em}
+  .outro .mark em{font-style:normal;color:var(--dim);font-weight:400}
+  .outro .url{font:500 26px/1 var(--mono);color:var(--live);margin-top:26px}
+  .outro .url2{font:400 19px/1 var(--mono);color:var(--faint);margin-top:14px}
+</style>
+
+<div class="scene" id="s1">
+  <h1 id="h1a"></h1>
+  <p class="sub" id="h1b" style="margin-top:24px"></p>
+</div>
+
+<div class="scene" id="s2">
+  <h2>Every AI agent runs on a clock.</h2>
+  <p class="sub">Model requests time out. Sessions close. Streams end. A breakpoint stops the clock
+     — and the evidence with it.</p>
+  <div class="cols">
+    <div class="col bad">
+      <h3>Breakpoint hit</h3><div class="who">a stepping debugger</div>
+      <div class="ev" data-at="0"><i>0.0s</i><span>execution stops, locals readable</span></div>
+      <div class="ev" data-at="1"><i>4s</i><span>you start reading the frame</span></div>
+      <div class="ev hot" data-at="2"><i>10s</i><span>model request times out</span></div>
+      <div class="ev hot" data-at="3"><i>18s</i><span>session torn down</span></div>
+      <div class="ev hot" data-at="4"><i>—</i><span>the bug is gone</span></div>
+    </div>
+    <div class="col good">
+      <h3>Trap fires</h3><div class="who">aitrap</div>
+      <div class="ev on" data-at="0"><i>0.0s</i><span>locals captured, ~18ns</span></div>
+      <div class="ev ok" data-at="1"><i>0.0s</i><span>function returns normally</span></div>
+      <div class="ev ok" data-at="2"><i>—</i><span>agent keeps working</span></div>
+      <div class="ev on" data-at="3"><i>later</i><span>you read the buffer, unhurried</span></div>
+      <div class="ev on" data-at="4"><i>—</i><span>caught on request 400</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="scene" id="s3">
+  <h2>No changes to the thing you're debugging.</h2>
+  <div class="term"><div class="tb"><i></i><i></i><i></i></div><pre id="termtext"></pre></div>
+  <div class="chip">aitrap in action</div>
+</div>
+
+<div class="scene" id="s4">
+  <h2>Real frames, out of a running agent.</h2>
+  <div class="con">
+    <div class="bar"><span><i class="dot"></i>agent running</span>
+      <span><b id="nf">0</b> frames captured</span><span><b>0</b> dropped</span>
+      <span><b>0</b> pauses</span></div>
+    <div id="frames"></div>
+  </div>
+  <div class="cap">captured from a LangGraph agent under aitrap — nothing here is mocked</div>
+</div>
+
+<div class="scene" id="s5">
+  <h2>Four frameworks, checked by watching them fire.</h2>
+  <p class="sub">A symbol can resolve and never be called. Each hook was verified against a real
+     running agent, not a grep.</p>
+  <table>
+    <tr><th>adapter</th><th>verified against</th><th></th></tr>
+    <tr data-at="0"><td><code>livekit</code></td><td>live production voice agent</td><td class="n">7/7</td></tr>
+    <tr data-at="1"><td><code>langchain</code></td><td>langchain-core 1.6.2 + langgraph</td><td class="n">9/9</td></tr>
+    <tr data-at="2"><td><code>openai_agents</code></td><td>openai-agents 0.22.0</td><td class="n">6/6</td></tr>
+    <tr data-at="3"><td><code>pydantic_ai</code></td><td>pydantic-ai 2.40.0</td><td class="n">4/4</td></tr>
+  </table>
+</div>
+
+<div class="scene" id="s6">
+  <h2>What it costs to leave armed.</h2>
+  <p class="sub">Traps arm per function, so code you didn't trap runs at full speed.</p>
+  <div class="figs">
+    <div class="fig ok" data-at="0"><b>0.94×</b><span>untrapped code — noise</span></div>
+    <div class="fig" data-at="1"><b>~18ns</b><span>per trapped call</span></div>
+    <div class="fig ok" data-at="2"><b>0</b><span>times it pauses</span></div>
+    <div class="fig" data-at="3"><b>0</b><span>dependencies</span></div>
+  </div>
+</div>
+
+<div class="scene outro" id="s7">
+  <div class="mark">aitrap <em>runtime traps</em></div>
+  <div class="url">github.com/riyadadlani02/aitrap</div>
+  <div class="url2">riyadadlani02.github.io/aitrap</div>
+</div>
+
+<script>
+let FRAMES = [];
+const $ = s => document.querySelector(s);
+const clamp = v => Math.max(0, Math.min(1, v));
+const ease = p => 1 - Math.pow(1 - p, 3);
+const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+const SCENES = [
+  {id:'s1', at:0,    dur:7},
+  {id:'s2', at:7,    dur:14},
+  {id:'s3', at:21,   dur:20},
+  {id:'s4', at:41,   dur:21},
+  {id:'s5', at:62,   dur:11},
+  {id:'s6', at:73,   dur:8},
+  {id:'s7', at:81,   dur:7},
+];
+const DURATION = 88;
+
+const TERM = [
+  {d:0.0, t:'$ ', type:'aitrap run -- python agent.py', cls:'p'},
+  {d:2.2, out:'[aitrap] listening on 127.0.0.1:51498', cls:'o'},
+  {d:2.9, t:'$ ', type:'aitrap trap --trapset langchain', cls:'p'},
+  {d:5.6, out:'{ "armed": 9, "failed": 0 }', cls:'g'},
+  {d:6.4, t:'$ ', type:'aitrap poll 0', cls:'p'},
+  {d:8.4, out:'{\n  "events": [\n    { "kind": "call",\n      "symbol": "…tools.base.BaseTool.run",\n      "locals": { "tool_input": {"order_id": "A-1"} },\n      "task": "Task-12" },', cls:'o'},
+  {d:11.6, out:'    { "kind": "call",\n      "symbol": "…chat_models.BaseChatModel.invoke",\n      "locals": { "input": "where is my order?" } }\n  ],\n  "nextCursor": 24, "dropped": 0 }', cls:'o'},
+  {d:15.0, out:'\n# the agent never stopped serving', cls:'k'},
+];
+
+function renderTerm(local){
+  let html = '';
+  for (const line of TERM){
+    if (local < line.d) break;
+    if (line.type){
+      const shown = Math.floor(clamp((local - line.d) / 1.1) * line.type.length);
+      html += `<span class="${line.cls}">${esc(line.t)}</span>${esc(line.type.slice(0, shown))}`;
+      if (shown < line.type.length){ html += '<span class="cur"> </span>\n'; return html; }
+      html += '\n';
+    } else {
+      html += `<span class="${line.cls}">${esc(line.out)}</span>\n`;
+    }
+  }
+  return html;
+}
+
+function renderFrames(local, dur){
+  const calls = FRAMES.filter(f => f.kind === 'call');
+  const n = Math.min(calls.length, Math.floor(clamp(local / (dur - 5)) * 7) + 1);
+  const show = calls.slice(0, n).reverse().slice(0, 4);
+  $('#nf').textContent = n * 2;
+  $('#frames').innerHTML = show.map(ev => {
+    const locals = Object.entries(ev.locals || {}).slice(0, 3);
+    return `<div class="fr">
+      <div class="fr-h"><span class="kd ${ev.kind}">${ev.kind}</span>
+        <span class="sy">${esc(ev.symbol.split('.').slice(-2).join('.'))}</span>
+        <span class="wh">${esc((ev.where || '').split('/').pop())}</span></div>
+      <div class="kv">${locals.map(([k, v]) => `<div class="kk">${esc(k)}</div>
+        <div class="vv">${esc(v.isPrimitive ? JSON.stringify(v.value) : v.type)}
+        <span class="t">${esc(v.isPrimitive ? v.type : '')}</span></div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function seek(t){
+  const cur = SCENES.filter(s => t >= s.at).pop() || SCENES[0];
+  for (const s of SCENES) $('#' + s.id).classList.toggle('on', s.id === cur.id);
+  const local = t - cur.at;
+
+  if (cur.id === 's1'){
+    const a = 'Your agent has a bug.';
+    const b = 'It happens on request 400, at 3am, once.';
+    $('#h1a').innerHTML = esc(a.slice(0, Math.floor(clamp(local / 1.6) * a.length))) +
+      (local > 2.4 ? `<br><span class="d">${esc(b.slice(0, Math.floor(clamp((local - 2.4) / 1.8) * b.length)))}</span>` : '');
+    $('#h1b').textContent = local > 4.6
+      ? 'A debugger has to be there when it happens. It cannot be.' : '';
+  }
+  if (cur.id === 's2'){
+    document.querySelectorAll('#s2 .ev').forEach(el => {
+      el.style.opacity = local > 1.4 + (+el.dataset.at) * 1.5 ? 1 : 0.12;
+    });
+  }
+  if (cur.id === 's3') $('#termtext').innerHTML = renderTerm(local);
+  if (cur.id === 's4') renderFrames(local, cur.dur);
+  if (cur.id === 's5')
+    document.querySelectorAll('#s5 tr[data-at]').forEach(el => {
+      el.style.opacity = local > 1.8 + (+el.dataset.at) * 1.1 ? 1 : 0.12;
+    });
+  if (cur.id === 's6')
+    document.querySelectorAll('#s6 .fig').forEach(el => {
+      el.style.opacity = local > 1.2 + (+el.dataset.at) * 0.7 ? 1 : 0.12;
+    });
+  if (cur.id === 's7'){
+    const p = ease(clamp(local / 1.4));
+    $('#s7').style.opacity = p;
+  }
+}
+window.seek = seek;
+window.DURATION = DURATION;
+window.ready = fetch('frames.json').then(r => r.json()).then(d => { FRAMES = d.events; seek(0); return true; });
+</script>

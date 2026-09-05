@@ -66,6 +66,9 @@
   /* demo */
   .demo-frame{border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--ink2)}
   .demo-frame iframe{display:block;width:100%;height:560px;border:0;background:var(--ink)}
+  .video-frame{border:1px solid var(--line);border-radius:5px;overflow:hidden;background:#000;
+               line-height:0}
+  .video-frame video{display:block;width:100%;height:auto}
   .demo-hint{margin:14px 0 0;color:var(--faint);font-size:14px}
 
   /* steps */
@@ -112,6 +115,7 @@
 <nav><div class="wrap">
   <span class="logo">aitrap <em>runtime traps</em></span>
   <a href="#pause">Why</a>
+  <a href="#video">Video</a>
   <a href="#demo">Demos</a>
   <a href="#use">Use it</a>
   <span class="sp"></span>
@@ -125,8 +129,8 @@
      you were chasing is gone. <b>aitrap traps capture and continue</b> — real values out of a
      live process that never pauses.</p>
   <div class="cta">
-    <a class="btn solid" href="demo-phone/">Tap the phone demo</a>
-    <a class="btn ghost" href="https://github.com/riyadadlani02/aitrap">Read the code</a>
+    <a class="btn solid" href="#video">Watch the 90-second demo</a>
+    <a class="btn ghost" href="demo-phone/">Tap the phone demo</a>
   </div>
 </div></header>
 
@@ -157,6 +161,19 @@
         <li class="hit"><span>—</span>bug reproduced 400 calls in</li>
       </ul>
     </div>
+  </div>
+</div></section>
+
+<section id="video"><div class="wrap">
+  <h2>Ninety seconds, end to end</h2>
+  <p class="sub">What a breakpoint does to an agent, what aitrap does instead, and real frames
+     captured out of a running LangGraph agent.</p>
+  <div class="video-frame">
+    <video controls preload="none" poster="aitrap-demo-poster.jpg"
+           playsinline width="1920" height="1080">
+      <source src="aitrap-demo.mp4" type="video/mp4">
+      Your browser can't play this video — <a href="aitrap-demo.mp4">download it instead</a>.
+    </video>
   </div>
 </div></section>
 
