@@ -8,12 +8,13 @@ every frame is reproducible rather than dependent on animation timing. `checkout
 recording the phone demo uses — real captures from `examples/checkout_app/backend.py` run under
 aitrap, in both states: broken, and again with `CHECKOUT_FIXED=1` after the repair. `voice.json` is
 the voice demo's recording, `examples/voice_agent.py` in both states (`VOICE_FIXED=1`), and drives
-the call scenes. The before and after screens and frames are all genuine, not mock-ups.
+the call scenes. `frameworks.json` is written by `scripts/record_timeline.py` alongside the site's
+recordings — the adapter scene's counts, silent symbols and frames all come out of those runs. The before and after screens and frames are all genuine, not mock-ups.
 
 ```bash
 npm i puppeteer-core
 python3 -m http.server 8912 &          # scene.html fetches its recordings, so file:// won't do
-node render.js                          # 4500 PNGs at 2560x1440
+node render.js                          # 4770 PNGs at 2560x1440
 ffmpeg -framerate 30 -i frames/%05d.png -vf scale=1920:1080:flags=lanczos \
        -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p -movflags +faststart \
        ../../docs/aitrap-demo.mp4

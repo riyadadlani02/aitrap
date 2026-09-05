@@ -128,6 +128,22 @@
   #v1 .fr,#v2 .fr{padding:8px 16px}
   .kr{color:var(--ret)}
 
+  /* adapter scene */
+  #s7 table{margin-top:0;font-size:17px}
+  #s7 td,#s7 th{padding:10px 10px}
+  #s7 tr{transition:none}
+  #s7 td code{font-size:16px}
+  #s7 .con{max-height:430px;overflow:hidden}
+  #s7 .fr{padding:8px 16px}
+  #s7 .fr-h{grid-template-columns:46px 1fr auto}
+  #s7 .sy{font-size:13px}
+  #s7 .kv{grid-template-columns:none;display:block;margin:4px 0 0 58px;font-size:12.5px;
+          color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #s7 .tk{font:400 11.5px/1.4 var(--mono);color:var(--faint)}
+  #fwsilent{padding:9px 16px;border-top:1px solid var(--line);font:400 12.5px/1.5 var(--mono);
+            color:var(--faint)}
+  #fwsilent b{color:var(--bad);font-weight:400}
+
   /* clock */
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}
   .col{border:1px solid var(--line);border-radius:7px;background:var(--ink2);padding:20px 22px}
@@ -248,16 +264,19 @@
 </div>
 
 <div class="scene" id="s7">
-  <h2>Any agent, any framework.</h2>
-  <p class="sub">The loop is four commands over HTTP, so it drives from a CLI, an MCP tool call,
-     or whatever your agent already speaks.</p>
-  <table>
-    <tr><th>adapter</th><th>verified against</th><th></th></tr>
-    <tr data-at="0"><td><code>livekit</code></td><td>live production voice agent</td><td class="n">7/7</td></tr>
-    <tr data-at="1"><td><code>langchain</code></td><td>langchain-core 1.6.2 + langgraph</td><td class="n">9/9</td></tr>
-    <tr data-at="2"><td><code>openai_agents</code></td><td>openai-agents 0.22.0</td><td class="n">6/6</td></tr>
-    <tr data-at="3"><td><code>pydantic_ai</code></td><td>pydantic-ai 2.40.0</td><td class="n">4/4</td></tr>
-  </table>
+  <h2>Every adapter, both doors.</h2>
+  <p class="sub">A trapset is JSON, and it is only trusted once its symbols are watched
+     <em>firing</em> against a running agent — through the sync entry point and the async one,
+     which are not the same code.</p>
+  <div class="split" style="margin-top:20px">
+    <div style="flex:1.05;min-width:0"><table id="fwtab"></table></div>
+    <div class="con" style="flex:1">
+      <div class="bar"><span><i class="dot"></i><b id="fwcmd"></b></span>
+        <span><b id="fwfired"></b> fired</span></div>
+      <div id="fwframes"></div>
+      <div id="fwsilent"></div>
+    </div>
+  </div>
 </div>
 
 <div class="scene" id="s8">
@@ -279,7 +298,7 @@
 </div>
 
 <script>
-let CO = null, VO = null;
+let CO = null, VO = null, FW = null;
 const $ = s => document.querySelector(s);
 const clamp = v => Math.max(0, Math.min(1, v));
 const ease = p => 1 - Math.pow(1 - p, 3);
@@ -289,9 +308,9 @@ const money = n => '$' + Number(n).toFixed(2);
 const SCENES = [
   {id:'s1', at:0},   {id:'s2', at:6},   {id:'s3', at:20},  {id:'s4', at:46},
   {id:'s5', at:66},  {id:'s6', at:82},  {id:'v1', at:99},  {id:'v2', at:114},
-  {id:'s7', at:125}, {id:'s8', at:134}, {id:'s9', at:142},
+  {id:'s7', at:125}, {id:'s8', at:143}, {id:'s9', at:151},
 ];
-const DURATION = 150;
+const DURATION = 159;
 
 function phoneHTML(r, o){
   const items = o.items === false ? '' : `
@@ -451,6 +470,21 @@ function voiceScene(st, opts, palette, els){
     fr.slice(0, n).map(e => vFrameHTML(e, palette)).join('');
 }
 
+// ---- adapters, from the recordings ----
+const shortSym = sym => sym.split('.').slice(-2).join('.');
+const FW_STEP = 2.7;
+
+function fwFrameHTML(f){
+  const locals = Object.entries(f.locals || {})
+    .filter(([, v]) => v.value !== null && v.value !== '').slice(0, 2)
+    .map(([k, v]) => `${k}=${JSON.stringify(v.value)}`).join('   ');
+  return `<div class="fr"><div class="fr-h"><span class="kd">${esc(f.kind)}</span>
+      <span class="sy">${esc(shortSym(f.symbol))}</span>
+      <span class="tk">${esc(f.task ? (f.task.length > 20 ? f.task.slice(0, 19) + '…'
+        : f.task) : 'no task')}</span></div>
+    ${locals ? `<div class="kv">${esc(locals)}</div>` : ''}</div>`;
+}
+
 function seek(t){
   const cur = SCENES.filter(s => t >= s.at).pop() || SCENES[0];
   for (const s of SCENES) document.getElementById(s.id).classList.toggle('on', s.id === cur.id);
@@ -551,9 +585,26 @@ function seek(t){
     } else { v.style.opacity = 0; $('#v2h').textContent = 'One line in the matcher. Same traps, re-run.'; }
   }
 
-  if (cur.id === 's7')
-    document.querySelectorAll('#s7 tr[data-at]').forEach(el => {
-      el.style.opacity = local > 1.6 + (+el.dataset.at) * 1.1 ? 1 : 0.12; });
+  if (cur.id === 's7'){
+    const P = FW.panels;
+    const i = Math.max(0, Math.min(P.length - 1, Math.floor(local / FW_STEP)));
+    $('#fwtab').innerHTML =
+      '<tr><th>adapter</th><th>entered by</th><th>fired</th><th>silent on this door</th></tr>' +
+      P.map((p, k) => `<tr style="opacity:${k < i ? .4 : k === i ? 1 : .12}">
+        <td><code>${esc(p.adapter)}</code></td>
+        <td class="n">${esc(p.door)}</td>
+        <td class="n">${p.fired}/${p.armed}</td>
+        <td class="n">${p.silent.length === 0 ? '—' : p.silent.length === 1
+          ? esc(shortSym(p.silent[0])) : p.silent.length + ' symbols'}</td></tr>`).join('');
+    const p = P[i], into = local - i * FW_STEP;
+    $('#fwcmd').textContent = `aitrap trap --trapset ${p.adapter}`;
+    $('#fwfired').textContent = `${p.fired}/${p.armed}`;
+    const n = Math.max(1, Math.min(p.frames.length, Math.floor(into / 0.32) + 1));
+    $('#fwframes').innerHTML = p.frames.slice(0, n).map(fwFrameHTML).join('');
+    $('#fwsilent').innerHTML = p.silent.length && into > 1.5
+      ? `armed and never called here: <b>${esc(p.silent.map(shortSym).join(', '))}</b>`
+      : (p.silent.length ? '' : (into > 1.5 ? 'every armed symbol fired' : ''));
+  }
   if (cur.id === 's8')
     document.querySelectorAll('#s8 .fig').forEach(el => {
       el.style.opacity = local > 1.1 + (+el.dataset.at) * 0.7 ? 1 : 0.12; });
@@ -564,5 +615,6 @@ window.DURATION = DURATION;
 window.ready = Promise.all([
   fetch('checkout.json').then(r => r.json()),
   fetch('voice.json').then(r => r.json()),
-]).then(([c, v]) => { CO = c; VO = v; seek(0); return true; });
+  fetch('frameworks.json').then(r => r.json()),
+]).then(([c, v, f]) => { CO = c; VO = v; FW = f; seek(0); return true; });
 </script>

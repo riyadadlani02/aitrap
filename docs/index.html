@@ -203,17 +203,21 @@
 </div></section>
 
 <section id="demo"><div class="wrap">
-  <h2>Four agents, four frameworks, one console</h2>
-  <p class="sub">The real console replaying real recordings &mdash; each one captured by running an
-     example from the repo under aitrap and arming that framework's trapset by name. Pick an agent
-     from the menu at the top right. Click any row for its locals, then click a non-primitive to
-     expand the object behind it.</p>
+  <h2>Seven agents, one console</h2>
+  <p class="sub">The real console replaying real recordings &mdash; each captured by running an
+     example from the repo under aitrap and arming that framework's trapset by name. Every adapter
+     is here through both doors, sync and async, because they do not fire the same symbols. Pick a
+     run from the menu at the top right, click any row for its locals, then click a non-primitive
+     to expand the object behind it.</p>
   <div class="demo-frame"><iframe src="demo/" title="aitrap console replaying a recorded session"
        loading="lazy"></iframe></div>
-  <p class="demo-hint">Nothing here is hand-written. The LangChain run arms nine symbols and fires
-     five &mdash; the four async ones sit silent in a synchronous graph, which is exactly what you
-     want a trapset to show you. <code>scripts/record_timeline.py</code> regenerates every one of
-     these recordings with no API keys.</p>
+  <p class="demo-hint">Nothing here is hand-written, and the pairs are the point. LangChain fires
+     five of nine armed symbols synchronously and the other four under <code>ainvoke</code>.
+     <code>Runner.run</code> never fires when the OpenAI Agents SDK is entered through
+     <code>run_sync</code> &mdash; 5 of 6 &mdash; while Pydantic AI's <code>run_sync</code> funnels
+     back through <code>AbstractAgent.run</code> and fires all four either way.
+     <code>scripts/record_timeline.py</code> regenerates all six framework recordings, no API
+     keys.</p>
 </div></section>
 
 <section><div class="wrap">
@@ -274,17 +278,20 @@
     <tr>
       <td><a href="demo/?ds=langchain"><code>langchain</code></a></td>
       <td>on-agent-run, on-llm-request, on-tool-call, on-state-write</td>
-      <td class="yes">langchain-core 1.6.2 + langgraph — 9/9</td>
+      <td class="yes">langchain-core 1.6.2 + langgraph — 9/9 across
+        <a href="demo/?ds=langchain">sync</a> + <a href="demo/?ds=langchain_async">async</a></td>
     </tr>
     <tr>
       <td><a href="demo/?ds=openai_agents"><code>openai_agents</code></a></td>
       <td>on-agent-run, on-turn, on-llm-request, on-tool-call, on-handoff</td>
-      <td class="yes">openai-agents 0.22.0 — 6/6</td>
+      <td class="yes">openai-agents 0.22.0 — 6/6 async,
+        <a href="demo/?ds=openai_agents_sync">5/6 via run_sync</a></td>
     </tr>
     <tr>
       <td><a href="demo/?ds=pydantic_ai"><code>pydantic_ai</code></a></td>
       <td>on-agent-run, on-llm-request, on-tool-call</td>
-      <td class="yes">pydantic-ai 2.40.0 — 4/4</td>
+      <td class="yes">pydantic-ai 2.40.0 — 4/4 async and
+        <a href="demo/?ds=pydantic_ai_sync">via run_sync</a></td>
     </tr>
   </table>
 </div></section>

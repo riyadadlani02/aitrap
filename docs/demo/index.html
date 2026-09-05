@@ -138,15 +138,25 @@
 // Replay transport: same shapes the real server returns, fed from a recorded run.
 (async function(){
   const SETS = {
-    toy:           ['toy agent (plain Python)', 'timeline.json',
-                    'examples/toy_agent.py &mdash; four functions trapped by dotted name, no framework'],
-    langchain:     ['LangChain + LangGraph', 'langchain.json',
-                    'examples/langchain_agent.py under <b>--trapset langchain</b> &mdash; 9 symbols armed, '
-                    + '5 fired; the four async ones sit silent in a sync graph'],
-    openai_agents: ['OpenAI Agents SDK', 'openai_agents.json',
-                    'examples/openai_agents_agent.py under <b>--trapset openai_agents</b> &mdash; 6 of 6 armed symbols fired'],
-    pydantic_ai:   ['Pydantic AI', 'pydantic_ai.json',
-                    'examples/pydantic_ai_agent.py under <b>--trapset pydantic_ai</b> &mdash; 4 of 4 armed symbols fired'],
+    toy:                ['toy agent (plain Python)', 'timeline.json',
+                         'examples/toy_agent.py &mdash; four functions trapped by dotted name, no framework'],
+    langchain:          ['LangChain + LangGraph &mdash; sync', 'langchain.json',
+                         'examples/langchain_agent.py under <b>--trapset langchain</b> &mdash; 9 armed, '
+                         + '5 fired: invoke, generate, BaseTool.run, Pregel.invoke, LastValue.update'],
+    langchain_async:    ['LangChain + LangGraph &mdash; async', 'langchain_async.json',
+                         'examples/langchain_async_agent.py, same trapset &mdash; the other 4 fire here: '
+                         + 'ainvoke, agenerate, BaseTool.arun, Pregel.ainvoke. Sync + async = 9/9'],
+    openai_agents:      ['OpenAI Agents SDK &mdash; async', 'openai_agents.json',
+                         'examples/openai_agents_agent.py under <b>--trapset openai_agents</b> &mdash; '
+                         + '6 of 6 fired, including the handoff to a second agent'],
+    openai_agents_sync: ['OpenAI Agents SDK &mdash; run_sync', 'openai_agents_sync.json',
+                         'the same agent through <b>Runner.run_sync</b> &mdash; 5 of 6: '
+                         + 'Runner.run never fires, run_sync goes straight to AgentRunner.run'],
+    pydantic_ai:        ['Pydantic AI &mdash; async', 'pydantic_ai.json',
+                         'examples/pydantic_ai_agent.py under <b>--trapset pydantic_ai</b> &mdash; 4 of 4 fired'],
+    pydantic_ai_sync:   ['Pydantic AI &mdash; run_sync', 'pydantic_ai_sync.json',
+                         'the same agent through <b>Agent.run_sync</b> &mdash; the same 4 of 4: '
+                         + 'run_sync funnels through AbstractAgent.run'],
   };
   const pick = new URLSearchParams(location.search).get('ds');
   const key = SETS[pick] ? pick : 'toy';

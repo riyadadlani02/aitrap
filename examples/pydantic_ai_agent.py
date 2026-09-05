@@ -22,4 +22,5 @@ async def main():
     print("[pa] done", flush=True)
     await asyncio.sleep(int(os.environ.get("HOLD", 0)))
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

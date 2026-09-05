@@ -15,7 +15,9 @@ DEFAULT_RUNS = [
     ("langchain", "examples/langchain_agent.py"),
     ("langchain", "examples/langchain_async_agent.py"),
     ("openai_agents", "examples/openai_agents_agent.py"),
+    ("openai_agents", "examples/openai_agents_sync_agent.py"),
     ("pydantic_ai", "examples/pydantic_ai_agent.py"),
+    ("pydantic_ai", "examples/pydantic_ai_sync_agent.py"),
 ]
 
 

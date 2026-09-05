@@ -14,10 +14,13 @@ OUT = ROOT / "docs" / "demo"
 PORTFILE = pathlib.Path(tempfile.gettempdir()) / "aitrap.port"
 DEPTH = 2  # levels of object expansion kept for the replay
 
-RUNS = [  # name, trapset, script
+RUNS = [  # name, trapset, script — every adapter through both doors, sync and async
     ("langchain", "langchain", "examples/langchain_agent.py"),
+    ("langchain_async", "langchain", "examples/langchain_async_agent.py"),
     ("openai_agents", "openai_agents", "examples/openai_agents_agent.py"),
+    ("openai_agents_sync", "openai_agents", "examples/openai_agents_sync_agent.py"),
     ("pydantic_ai", "pydantic_ai", "examples/pydantic_ai_agent.py"),
+    ("pydantic_ai_sync", "pydantic_ai", "examples/pydantic_ai_sync_agent.py"),
 ]
 
 
@@ -85,7 +88,9 @@ def record(name, trapset, script, rounds=4, watch=18, max_objects=1200):
 
     fired = sum(1 for t in traps if t["hits"])
     out = OUT / f"{name}.json"
-    out.write_text(json.dumps({"events": events, "objects": objects}))
+    out.write_text(json.dumps({"events": events, "objects": objects,
+                               "meta": {"script": script, "trapset": trapset,
+                                        "armed": len(traps), "fired": fired}}))
     print(f"{name:>14}  {len(events):>4} events  {fired}/{len(traps)} symbols fired  "
           f"{len(objects)} objects  -> {out.relative_to(ROOT)}  "
           f"({len(armed.get('failed', []))} failed to arm)")
@@ -94,7 +99,45 @@ def record(name, trapset, script, rounds=4, watch=18, max_objects=1200):
     return len(events)
 
 
+# Panel copy for the video's adapter scene. The counts and frames under it are read back
+# out of the recordings, never typed here.
+VIDEO_PANELS = [
+    ("langchain", "langchain", "sync"),
+    ("langchain_async", "langchain", "async"),
+    ("openai_agents", "openai_agents", "async"),
+    ("openai_agents_sync", "openai_agents", "run_sync"),
+    ("pydantic_ai", "pydantic_ai", "async"),
+    ("pydantic_ai_sync", "pydantic_ai", "run_sync"),
+]
+
+
+def build_video_data(path=ROOT / "scripts" / "video" / "frameworks.json", per_panel=5):
+    """Trim the recordings down to what the video scene shows: a few frames each, plus the
+    symbols that stayed silent on that door — read from the adapter, not typed by hand."""
+    panels = []
+    for name, adapter, door in VIDEO_PANELS:
+        d = json.loads((OUT / f"{name}.json").read_text())
+        armed = [h["symbol"] for hooks in
+                 json.loads((ROOT / "aitrap" / "trapsets" / f"{adapter}.json").read_text())
+                 ["hooks"].values() for h in hooks]
+        rang = {e["symbol"] for e in d["events"]}
+        seen, frames = set(), []
+        for e in d["events"]:
+            if e["symbol"] in seen or len(frames) >= per_panel:
+                continue
+            seen.add(e["symbol"])
+            frames.append({"kind": e["kind"], "symbol": e["symbol"], "task": e.get("task"),
+                           "locals": {k: v for k, v in (e.get("locals") or {}).items()
+                                      if v.get("isPrimitive")}})
+        panels.append({"name": name, "adapter": adapter, "door": door, "frames": frames,
+                       "silent": [a for a in armed if a not in rang], **d["meta"]})
+    path.write_text(json.dumps({"panels": panels}))
+    print(f"{'video':>18}  {len(panels)} panels -> {path.relative_to(ROOT)}")
+
+
 if __name__ == "__main__":
     runs = [(sys.argv[1], sys.argv[1], sys.argv[2])] if len(sys.argv) > 2 else RUNS
     for name, trapset, script in runs:
         record(name, trapset, script)
+    if len(runs) == len(RUNS):
+        build_video_data()

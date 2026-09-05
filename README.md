@@ -56,7 +56,7 @@ a non-primitive to expand it from the live process.
 |---|---|
 | [Checkout](https://riyadadlani02.github.io/aitrap/demo-phone/) | A coupon silently rejected because two functions disagree about the subtotal. Before/after the fix. |
 | [Voice agent](https://riyadadlani02.github.io/aitrap/demo-voice/) | A LiveKit call filed against the wrong person because a matcher defaulted to `self`. Before/after the fix. |
-| [Console](https://riyadadlani02.github.io/aitrap/demo/) | The live console replaying recorded runs of four agents — plain Python, [LangChain + LangGraph](https://riyadadlani02.github.io/aitrap/demo/?ds=langchain), [OpenAI Agents](https://riyadadlani02.github.io/aitrap/demo/?ds=openai_agents), [Pydantic AI](https://riyadadlani02.github.io/aitrap/demo/?ds=pydantic_ai). |
+| [Console](https://riyadadlani02.github.io/aitrap/demo/) | The live console replaying seven recorded runs — plain Python, plus every adapter through both doors: LangChain [sync](https://riyadadlani02.github.io/aitrap/demo/?ds=langchain) / [async](https://riyadadlani02.github.io/aitrap/demo/?ds=langchain_async), OpenAI Agents [async](https://riyadadlani02.github.io/aitrap/demo/?ds=openai_agents) / [run_sync](https://riyadadlani02.github.io/aitrap/demo/?ds=openai_agents_sync), Pydantic AI [async](https://riyadadlani02.github.io/aitrap/demo/?ds=pydantic_ai) / [run_sync](https://riyadadlani02.github.io/aitrap/demo/?ds=pydantic_ai_sync). |
 
 Every state in them is a real capture from `examples/`, in both the broken and repaired form —
 `CHECKOUT_FIXED=1` and `VOICE_FIXED=1` apply the respective repairs. Regenerate the framework
@@ -74,13 +74,15 @@ aitrap probe                 # which symbols resolve against what's installed
 | Adapter | Hooks | Verified against |
 |---|---|---|
 | `livekit` | on-tool-call, on-llm-request, on-handoff, on-user-turn | livekit-agents 1.6.6, on a live production voice agent — 7/7 |
-| `langchain` | on-agent-run, on-llm-request, on-tool-call, on-state-write | langchain-core 1.6.2 + langgraph — 9/9 |
-| `openai_agents` | on-agent-run, on-turn, on-llm-request, on-tool-call, on-handoff | openai-agents 0.22.0 — 6/6 |
-| `pydantic_ai` | on-agent-run, on-llm-request, on-tool-call | pydantic-ai 2.40.0 — 4/4 |
+| `langchain` | on-agent-run, on-llm-request, on-tool-call, on-state-write | langchain-core 1.6.2 + langgraph — 9/9 across sync + async |
+| `openai_agents` | on-agent-run, on-turn, on-llm-request, on-tool-call, on-handoff | openai-agents 0.22.0 — 6/6 async, 5/6 through `Runner.run_sync` |
+| `pydantic_ai` | on-agent-run, on-llm-request, on-tool-call | pydantic-ai 2.40.0 — 4/4 both ways |
 
 Every symbol above was observed **firing** against a running agent, not merely resolving — a
 symbol can resolve and never be called, which is how a trapset rots silently when a framework
-moves a function. Reproduce it yourself, no API keys needed:
+moves a function. Sync and async are recorded separately because they are not the same code path:
+LangChain's four `a*` symbols never fire in a synchronous graph, and `Runner.run` never fires when
+the OpenAI Agents SDK is entered through `run_sync`. Reproduce it yourself, no API keys needed:
 
 ```bash
 python scripts/verify_trapset.py            # all four, against examples/
