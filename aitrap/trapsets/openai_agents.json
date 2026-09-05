@@ -1,18 +1,22 @@
 {
-  "package": "openai-agents / pydantic-ai",
-  "verified_against": "UNVERIFIED - built blind, run `aitrap probe openai_agents`",
+  "package": "openai-agents",
+  "verified_against": "openai-agents 0.22.0 — every symbol observed firing",
   "hooks": {
-    "on-tool-call": [
-      {"symbol": "agents.run.Runner._run_single_turn"},
-      {"symbol": "agents._run_impl.RunImpl.execute_function_tool_calls"},
-      {"symbol": "pydantic_ai.tools.Tool.run"}
+    "on-agent-run": [
+      {"symbol": "agents.run.Runner.run"},
+      {"symbol": "agents.run.AgentRunner.run"}
+    ],
+    "on-turn": [
+      {"symbol": "agents.run_internal.run_loop.run_single_turn"}
     ],
     "on-llm-request": [
-      {"symbol": "agents.models.openai_chatcompletions.OpenAIChatCompletionsModel.get_response"},
-      {"symbol": "pydantic_ai.models.openai.OpenAIModel.request"}
+      {"symbol": "agents.run_internal.run_loop.get_new_response"}
+    ],
+    "on-tool-call": [
+      {"symbol": "agents.run_internal.tool_execution.execute_function_tool_calls"}
     ],
     "on-handoff": [
-      {"symbol": "agents._run_impl.RunImpl.execute_handoffs"}
+      {"symbol": "agents.run_internal.turn_resolution.execute_handoffs"}
     ]
   }
 }

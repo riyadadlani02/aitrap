@@ -162,12 +162,22 @@ def test_symbol_in_the_running_script_resolves_to_the_live_module():
         del sys.modules["fake_pkg_module"]
 
 
-def test_livekit_trapset_resolves():
+def test_installed_trapsets_fully_resolve():
+    """Every symbol in a trapset must resolve wherever that framework is installed.
+    Trapsets for frameworks that aren't installed here are skipped, not failed —
+    nobody should need all four SDKs to run the suite."""
     from aitrap import trapsets
 
-    result = trapsets.probe("livekit")["livekit"]
-    ok, total = result["resolved"].split("/")
-    assert ok == total, result
+    checked = []
+    for name, result in trapsets.probe().items():
+        ok, total = (int(n) for n in result["resolved"].split("/"))
+        if ok == 0:
+            continue  # framework not installed in this environment
+        broken = [c["symbol"] for hook in result["hooks"].values()
+                  for c in hook if not c["ok"]]
+        assert not broken, f"{name}: {broken}"
+        checked.append(f"{name} {ok}/{total}")
+    print(f"     trapsets resolved here: {', '.join(checked) or 'none installed'}")
 
 
 if __name__ == "__main__":

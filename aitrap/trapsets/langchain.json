@@ -1,18 +1,20 @@
 {
-  "package": "langchain / langgraph",
-  "verified_against": "UNVERIFIED - built blind, run `aitrap probe langchain`",
+  "package": "langchain-core / langgraph",
+  "verified_against": "langchain-core 1.6.2, langchain 1.4.0, langgraph — every symbol observed firing",
   "hooks": {
-    "on-tool-call": [
-      {"symbol": "langchain_core.tools.base.BaseTool.run"},
-      {"symbol": "langchain_core.tools.base.BaseTool.arun"}
+    "on-agent-run": [
+      {"symbol": "langgraph.pregel.Pregel.invoke"},
+      {"symbol": "langgraph.pregel.Pregel.ainvoke"}
     ],
     "on-llm-request": [
       {"symbol": "langchain_core.language_models.chat_models.BaseChatModel.invoke"},
-      {"symbol": "langchain_core.language_models.chat_models.BaseChatModel.ainvoke"}
+      {"symbol": "langchain_core.language_models.chat_models.BaseChatModel.ainvoke"},
+      {"symbol": "langchain_core.language_models.chat_models.BaseChatModel.generate"},
+      {"symbol": "langchain_core.language_models.chat_models.BaseChatModel.agenerate"}
     ],
-    "on-handoff": [
-      {"symbol": "langgraph.pregel.Pregel.invoke"},
-      {"symbol": "langgraph.pregel.Pregel.ainvoke"}
+    "on-tool-call": [
+      {"symbol": "langchain_core.tools.base.BaseTool.run"},
+      {"symbol": "langchain_core.tools.base.BaseTool.arun"}
     ],
     "on-state-write": [
       {"symbol": "langgraph.channels.last_value.LastValue.update"}

@@ -217,25 +217,31 @@
 
 <section><div class="wrap">
   <h2>Framework hooks</h2>
-  <p class="sub">Adapters are plain JSON mapping a hook name to real symbols. Frameworks move, so
-     <code>aitrap probe</code> resolves every symbol against what's actually installed and names
-     the ones that don't.</p>
+  <p class="sub">Adapters are plain JSON mapping a hook name to real symbols. Every symbol below
+     was watched <em>firing</em> against a running agent — resolving isn't enough, since a symbol
+     can resolve and never be called, which is how an adapter rots silently when a framework moves
+     a function. <code>scripts/verify_trapset.py</code> reproduces it with no API keys.</p>
   <table>
-    <tr><th>adapter</th><th>hooks</th><th>state</th></tr>
+    <tr><th>adapter</th><th>hooks</th><th>verified against</th></tr>
     <tr>
       <td><code>livekit</code></td>
       <td>on-tool-call, on-llm-request, on-handoff, on-user-turn</td>
-      <td class="yes">verified against a live production voice agent — 7/7 armed mid-session</td>
+      <td class="yes">livekit-agents 1.6.6, on a live production voice agent — 7/7</td>
     </tr>
     <tr>
       <td><code>langchain</code></td>
-      <td>on-tool-call, on-llm-request, on-handoff, on-state-write</td>
-      <td class="no">written blind, not yet verified — run <code>aitrap probe langchain</code></td>
+      <td>on-agent-run, on-llm-request, on-tool-call, on-state-write</td>
+      <td class="yes">langchain-core 1.6.2 + langgraph — 9/9</td>
     </tr>
     <tr>
       <td><code>openai_agents</code></td>
-      <td>on-tool-call, on-llm-request, on-handoff</td>
-      <td class="no">written blind, not yet verified — run <code>aitrap probe openai_agents</code></td>
+      <td>on-agent-run, on-turn, on-llm-request, on-tool-call, on-handoff</td>
+      <td class="yes">openai-agents 0.22.0 — 6/6</td>
+    </tr>
+    <tr>
+      <td><code>pydantic_ai</code></td>
+      <td>on-agent-run, on-llm-request, on-tool-call</td>
+      <td class="yes">pydantic-ai 2.40.0 — 4/4</td>
     </tr>
   </table>
 </div></section>

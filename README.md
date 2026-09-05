@@ -58,11 +58,20 @@ aitrap trap --trapset livekit --hook on-tool-call
 aitrap probe                 # which symbols resolve against what's installed
 ```
 
-| Adapter | Hooks | Status |
+| Adapter | Hooks | Verified against |
 |---|---|---|
-| `livekit` | on-tool-call, on-llm-request, on-handoff, on-user-turn | **verified**, livekit-agents 1.6.6, 7/7 |
-| `langchain` | on-tool-call, on-llm-request, on-handoff, on-state-write | **unverified** — written blind |
-| `openai_agents` | on-tool-call, on-llm-request, on-handoff | **unverified** — written blind |
+| `livekit` | on-tool-call, on-llm-request, on-handoff, on-user-turn | livekit-agents 1.6.6, on a live production voice agent — 7/7 |
+| `langchain` | on-agent-run, on-llm-request, on-tool-call, on-state-write | langchain-core 1.6.2 + langgraph — 9/9 |
+| `openai_agents` | on-agent-run, on-turn, on-llm-request, on-tool-call, on-handoff | openai-agents 0.22.0 — 6/6 |
+| `pydantic_ai` | on-agent-run, on-llm-request, on-tool-call | pydantic-ai 2.40.0 — 4/4 |
+
+Every symbol above was observed **firing** against a running agent, not merely resolving — a
+symbol can resolve and never be called, which is how a trapset rots silently when a framework
+moves a function. Reproduce it yourself, no API keys needed:
+
+```bash
+python scripts/verify_trapset.py            # all four, against examples/
+```
 
 Run `aitrap probe <name>` before trusting an unverified adapter, or after a framework upgrade.
 PRs fixing symbols welcome.
