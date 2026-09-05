@@ -72,7 +72,18 @@ def resolve(dotted):
         except AttributeError as exc:
             raise LookupError(f"{dotted}: {exc}") from None
         return obj
-    raise LookupError(f"{dotted}: no importable module prefix")
+    raise LookupError(f"{dotted}: no importable module prefix{_shorter_name(parts)}")
+
+
+def _shorter_name(parts):
+    """A script run directly puts its own directory on sys.path, not the repo root, so
+    `examples.toy_agent.f` is unimportable there while `toy_agent.f` resolves. Say so
+    rather than leaving the caller to guess which prefix the target actually has."""
+    tail, names = parts[-1], set(parts[:-1])
+    for name, module in list(sys.modules.items()):
+        if name.split(".")[-1] in names and hasattr(module, tail):
+            return f" — the target has it as {name}.{tail}"
+    return ""
 
 
 def _prefer_main(mod):

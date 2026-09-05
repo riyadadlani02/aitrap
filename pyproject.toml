@@ -5,7 +5,23 @@ description = "Non-stopping runtime traps for live AI agent processes - so an AI
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
+keywords = ["debugging", "observability", "sys.monitoring", "agents", "llm", "tracing", "mcp"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Debuggers",
+  "Topic :: System :: Monitoring",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://riyadadlani02.github.io/aitrap/"
+Repository = "https://github.com/riyadadlani02/aitrap"
+"Live demo" = "https://riyadadlani02.github.io/aitrap/live/"
+Issues = "https://github.com/riyadadlani02/aitrap/issues"
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.2"]

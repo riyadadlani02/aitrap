@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from aitrap import render
+from aitrap import engine as engine_module
 from aitrap.engine import Buffer, Engine
 
 
@@ -160,6 +161,24 @@ def test_symbol_in_the_running_script_resolves_to_the_live_module():
         assert resolve("fake_pkg_module.evaluate_promo") is evaluate_promo
     finally:
         del sys.modules["fake_pkg_module"]
+
+
+def test_unresolvable_symbol_points_at_the_name_the_target_has():
+    """The commonest miss: a script run directly is importable under its bare module name,
+    not the package path someone copied out of a README."""
+    import types
+
+    mod = types.ModuleType("lonely_agent")
+    mod.handle_turn = lambda: None
+    sys.modules["lonely_agent"] = mod
+    try:
+        engine_module.resolve("examples.lonely_agent.handle_turn")
+    except LookupError as exc:
+        assert "lonely_agent.handle_turn" in str(exc), exc
+    else:
+        raise AssertionError("expected LookupError")
+    finally:
+        del sys.modules["lonely_agent"]
 
 
 def test_installed_trapsets_fully_resolve():

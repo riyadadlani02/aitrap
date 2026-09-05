@@ -46,7 +46,8 @@ def api(port, method, path, body=None):
         return json.load(e)
 
 
-def record(name, trapset, script, rounds=4, watch=18, max_objects=1200):
+def record(name, trapset, script, rounds=4, watch=18, max_objects=1200,
+           symbols=(), events=("call",)):
     PORTFILE.unlink(missing_ok=True)
     # Pin generously: the site replays clicks into objects captured minutes earlier, which the
     # live default (256) would have let go.
@@ -66,7 +67,9 @@ def record(name, trapset, script, rounds=4, watch=18, max_objects=1200):
         port = PORTFILE.read_text().strip()
         time.sleep(1.5)
 
-        armed = api(port, "POST", "/trap", {"trapset": trapset, "events": ["call"]})
+        armed = api(port, "POST", "/trap", {"trapset": trapset, "events": list(events)})
+        for sym in symbols:  # the example's own functions, where a story's telling frame lives
+            api(port, "POST", "/trap", {"symbol": sym, "events": list(events)})
         time.sleep(watch)
 
         events, cursor = [], 0
@@ -210,5 +213,8 @@ if __name__ == "__main__":
     for name, trapset, script in runs:
         record(name, trapset, script)
     if len(runs) == len(RUNS):
+        for name, trapset, script, _fixed, symbols in STORIES:
+            record(name, trapset, script, rounds=5, watch=16, symbols=symbols,
+                   events=("call", "return"))
         build_video_data()
         record_stories()
