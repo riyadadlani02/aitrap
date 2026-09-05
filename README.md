@@ -1,5 +1,7 @@
 # aitrap
 
+**[Site and live demo →](https://riyadadlani02.github.io/aitrap/)**
+
 Non-stopping runtime traps for live AI agent processes — so an AI coding agent can read **real
 values** out of a running agent without freezing the agent it's debugging.
 
@@ -32,6 +34,10 @@ aitrap traps **capture and continue**. Built on `sys.monitoring` (PEP 669), arme
 Need to actually step? Use mcp-debugger. This does the thing it can't.
 
 ## Live console
+
+[Try it without installing anything](https://riyadadlani02.github.io/aitrap/demo/) — the real
+console replaying a recorded run of `examples/toy_agent.py`.
+
 
 The trap server serves a console at its own port — open it while the target runs:
 
