@@ -1,0 +1,273 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aitrap console</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161f; --ink2:#171d29; --raise:#1c2432; --line:#28313f;
+    --text:#d7dde8; --dim:#79839a; --faint:#4d5768;
+    --call:#e0a33e; --return:#3fb8a0; --raise-c:#e0656f; --live:#7fd1c1;
+    --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--ink);color:var(--text);font:14px/1.5 var(--sans);
+       display:flex;flex-direction:column;overflow:hidden}
+
+  /* status bar */
+  header{display:flex;align-items:baseline;gap:28px;padding:14px 20px;
+         border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{font-weight:600;letter-spacing:-.01em}
+  .brand span{color:var(--faint);font-weight:400}
+  .stat{font:400 13px/1 var(--mono);color:var(--dim)}
+  .stat b{color:var(--text);font-weight:500}
+  .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;
+         background:var(--live);margin-right:8px;vertical-align:middle}
+  .beating{animation:beat 1.8s ease-in-out infinite}
+  @keyframes beat{0%,100%{opacity:1}50%{opacity:.25}}
+  .gone{background:var(--raise-c);animation:none}
+  header .right{margin-left:auto;display:flex;gap:8px}
+  button{font:500 12px/1 var(--sans);color:var(--dim);background:transparent;
+         border:1px solid var(--line);border-radius:3px;padding:6px 11px;cursor:pointer}
+  button:hover{color:var(--text);border-color:var(--faint)}
+  button[aria-pressed=true]{color:var(--ink);background:var(--live);border-color:var(--live)}
+  button:focus-visible{outline:2px solid var(--live);outline-offset:2px}
+
+  /* hero: the live axis */
+  .axis{position:relative;height:104px;border-bottom:1px solid var(--line);background:var(--ink2)}
+  canvas{display:block;width:100%;height:100%}
+  .axis figcaption{position:absolute;left:20px;bottom:8px;right:20px;display:flex;
+        justify-content:space-between;font:400 11px/1 var(--mono);color:var(--faint);
+        pointer-events:none}
+
+  /* body */
+  main{flex:1;display:grid;grid-template-columns:260px 1fr;min-height:0}
+  aside{border-right:1px solid var(--line);overflow-y:auto;padding:16px 0}
+  .side-h{padding:0 20px 10px;font-size:12px;color:var(--dim)}
+  .trap{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:7px 20px;align-items:baseline}
+  .trap b{font:500 13px/1 var(--mono);color:var(--text);text-align:right}
+  .trap.idle b{color:var(--faint)}
+  .trap i{font-style:normal;font:400 12px/1.35 var(--mono);color:var(--dim);word-break:break-all}
+
+  .stream{overflow-y:auto;min-height:0}
+  .ev{border-bottom:1px solid var(--line);cursor:pointer}
+  .ev:hover{background:var(--ink2)}
+  .ev-row{display:grid;grid-template-columns:64px 1fr auto auto;gap:14px;
+          align-items:baseline;padding:9px 20px}
+  .kind{font:500 11px/1.4 var(--mono)}
+  .kind.call{color:var(--call)} .kind.return{color:var(--return)} .kind.raise{color:var(--raise-c)}
+  .sym{font:400 13px/1.4 var(--mono);color:var(--text);word-break:break-all}
+  .task,.age{font:400 12px/1.4 var(--mono);color:var(--faint);white-space:nowrap}
+  .detail{padding:2px 20px 14px 98px;display:none}
+  .ev.open .detail{display:block}
+  .kv{display:grid;grid-template-columns:minmax(90px,auto) 1fr;gap:4px 16px;
+      font:400 12.5px/1.6 var(--mono);align-items:baseline}
+  .k{color:var(--dim)}
+  .v{color:var(--text);word-break:break-all}
+  .v .t{color:var(--faint)}
+  .obj{color:var(--live);border-bottom:1px dotted var(--faint);cursor:pointer}
+  .obj:hover{border-bottom-style:solid}
+  .redacted{color:var(--raise-c)}
+  .nested{margin:6px 0 6px 0;padding-left:14px;border-left:1px solid var(--line)}
+
+  .empty{padding:56px 24px;color:var(--dim);max-width:56ch}
+  .empty h2{font:500 16px/1.4 var(--sans);color:var(--text);margin:0 0 8px}
+  .empty code{font:400 13px/1.7 var(--mono);color:var(--live);display:block;margin-top:12px}
+  @media (prefers-reduced-motion:reduce){.beating{animation:none}}
+  @media (max-width:720px){main{grid-template-columns:1fr}aside{display:none}}
+</style>
+
+<header>
+  <div class="brand">aitrap <span>console</span></div>
+  <div class="stat"><i class="pulse beating" id="dot"></i><span id="alive">connecting</span></div>
+  <div class="stat"><b id="n-traps">0</b> traps armed</div>
+  <div class="stat"><b id="n-events">0</b> events</div>
+  <div class="stat" id="drop-stat" hidden><b id="n-dropped">0</b> dropped</div>
+  <div class="right">
+    <button id="freeze" aria-pressed="false">Freeze view</button>
+    <button id="clear">Clear</button>
+  </div>
+</header>
+
+<figure class="axis" style="margin:0">
+  <canvas id="axis"></canvas>
+  <figcaption><span>90 seconds ago</span><span id="now-label">now</span></figcaption>
+</figure>
+
+<main>
+  <aside>
+    <div class="side-h">Armed traps</div>
+    <div id="traps"></div>
+  </aside>
+  <section class="stream" id="stream">
+    <div class="empty" id="empty">
+      <h2>Waiting for the first trap to fire.</h2>
+      <p>Arm one against the running process, then act on it — every hit lands here without
+         stopping the target.</p>
+      <code>aitrap trap --trapset livekit</code>
+    </div>
+  </section>
+</main>
+
+<script>
+const WINDOW_MS = 90000;
+const KIND_COLOR = {call:'#e0a33e', return:'#3fb8a0', raise:'#e0656f'};
+let cursor = 0, events = [], frozen = false, alive = false, since = null;
+
+const $ = id => document.getElementById(id);
+const cvs = $('axis'), ctx = cvs.getContext('2d');
+
+function fit(){
+  const r = cvs.getBoundingClientRect(), d = devicePixelRatio || 1;
+  cvs.width = r.width * d; cvs.height = r.height * d; ctx.setTransform(d,0,0,d,0,0);
+}
+addEventListener('resize', fit); fit();
+
+// The hero: a time axis that keeps advancing whether or not events arrive.
+// That movement IS the claim - the target is running the whole time.
+function draw(){
+  const w = cvs.clientWidth, h = cvs.clientHeight, now = Date.now(), lane = h - 34;
+  ctx.clearRect(0,0,w,h);
+
+  ctx.strokeStyle = '#28313f'; ctx.lineWidth = 1;
+  for (let s = 0; s <= 90; s += 10){                    // second gridlines, sliding
+    const x = w - (s / 90) * w + ((now % 1000) / 1000) * (w / 90);
+    ctx.globalAlpha = s === 0 ? 0 : .5;
+    ctx.beginPath(); ctx.moveTo(x, 14); ctx.lineTo(x, lane); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const ev of events){                              // one tick per captured event
+    const age = now - ev.ts * 1000;
+    if (age > WINDOW_MS || age < 0) continue;
+    const x = w - (age / WINDOW_MS) * w;
+    ctx.strokeStyle = KIND_COLOR[ev.kind] || '#79839a';
+    ctx.globalAlpha = Math.max(.25, 1 - age / WINDOW_MS);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, 18); ctx.lineTo(x, lane - 4); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = alive ? '#7fd1c1' : '#e0656f';       // the now-edge
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(w - 1, 14); ctx.lineTo(w - 1, lane); ctx.stroke();
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+function renderValue(v){
+  if (v == null) return '<span class="v">—</span>';
+  if (v.value === '«redacted»') return `<span class="v redacted">redacted</span>`;
+  if (v.isPrimitive) return `<span class="v">${esc(JSON.stringify(v.value))} <span class="t">${esc(v.type)}</span></span>`;
+  if (v.objectId != null)
+    return `<span class="v"><span class="obj" data-oid="${v.objectId}">${esc(v.type)} #${v.objectId}</span></span>`;
+  if (v.value && typeof v.value === 'object'){
+    const rows = Object.entries(v.value)
+      .map(([k, sub]) => `<div class="k">${esc(k)}</div>${renderValue(sub)}`).join('');
+    return `<span class="v"><div class="kv nested">${rows}</div></span>`;
+  }
+  return `<span class="v"><span class="t">${esc(v.type)}</span></span>`;
+}
+
+function detailFor(ev){
+  const pairs = [];
+  if (ev.locals) for (const [k, v] of Object.entries(ev.locals)) pairs.push([k, v]);
+  if (ev.returned) pairs.push(['returns', ev.returned]);
+  if (ev.exception) pairs.push(['raised', {isPrimitive:true, value:ev.exception, type:''}]);
+  pairs.push(['at', {isPrimitive:true, value:ev.where, type:''}]);
+  return `<div class="kv">${pairs.map(([k,v]) => `<div class="k">${esc(k)}</div>${renderValue(v)}`).join('')}</div>`;
+}
+
+function shortSym(s){ const p = s.split('.'); return p.slice(-2).join('.'); }
+
+function paint(){
+  if (frozen) return;
+  const stream = $('stream');
+  if (!events.length) return;
+  $('empty')?.remove();
+  stream.innerHTML = events.slice(-300).reverse().map(ev => `
+    <article class="ev" data-seq="${ev.seq}">
+      <div class="ev-row">
+        <span class="kind ${ev.kind}">${ev.kind}</span>
+        <span class="sym">${esc(shortSym(ev.symbol))}</span>
+        <span class="task">${esc(ev.task || ev.thread)}</span>
+        <span class="age" data-ts="${ev.ts}"></span>
+      </div>
+      <div class="detail">${detailFor(ev)}</div>
+    </article>`).join('');
+  ages();
+}
+
+function ages(){
+  const now = Date.now();
+  for (const el of document.querySelectorAll('.age')){
+    const d = (now - el.dataset.ts * 1000) / 1000;
+    el.textContent = d < 60 ? `${d.toFixed(1)}s ago` : `${(d/60).toFixed(1)}m ago`;
+  }
+}
+setInterval(ages, 1000);
+
+$('stream').addEventListener('click', async e => {
+  const obj = e.target.closest('.obj');
+  if (obj){
+    e.stopPropagation();
+    const r = await fetch(`/inspect?objectId=${obj.dataset.oid}`).then(r => r.json());
+    const box = document.createElement('div');
+    box.className = 'kv nested';
+    box.innerHTML = r.error
+      ? `<div class="k">gone</div><span class="v redacted">${esc(r.error)}</span>`
+      : Object.entries(r.fields).map(([k,v]) => `<div class="k">${esc(k)}</div>${renderValue(v)}`).join('');
+    obj.replaceWith(box);
+    return;
+  }
+  e.target.closest('.ev')?.classList.toggle('open');
+});
+
+$('freeze').onclick = e => {
+  frozen = !frozen;
+  e.target.setAttribute('aria-pressed', frozen);
+  e.target.textContent = frozen ? 'Resume view' : 'Freeze view';
+  if (!frozen) paint();
+};
+$('clear').onclick = async () => {
+  await fetch('/events', {method:'DELETE'});
+  events = []; cursor = 0;
+  $('stream').innerHTML = '<div class="empty" id="empty"><h2>Cleared.</h2><p>New hits will appear as they fire.</p></div>';
+};
+
+async function tick(){
+  try{
+    const [poll, traps] = await Promise.all([
+      fetch(`/poll?cursor=${cursor}&limit=200`).then(r => r.json()),
+      fetch('/traps').then(r => r.json()),
+    ]);
+    if (!alive){ alive = true; since = since || Date.now(); }
+    cursor = poll.nextCursor;
+    if (poll.events.length){ events.push(...poll.events); paint(); }
+    $('n-events').textContent = events.length;
+    $('n-traps').textContent = traps.traps.length;
+    if (poll.dropped){ $('drop-stat').hidden = false; $('n-dropped').textContent = poll.dropped; }
+
+    const rows = traps.traps.slice().sort((a,b) => b.hits - a.hits);
+    $('traps').innerHTML = rows.length ? rows.map(t => `
+      <div class="trap ${t.hits ? '' : 'idle'}">
+        <b>${t.hits}</b><i>${esc(shortSym(t.symbol))}</i>
+      </div>`).join('')
+      : '<div class="trap idle"><b>0</b><i>nothing armed yet</i></div>';
+  }catch(err){
+    alive = false;
+  }
+  const dot = $('dot');
+  dot.className = 'pulse' + (alive ? ' beating' : ' gone');
+  $('alive').textContent = alive
+    ? `target running · ${Math.round((Date.now() - since)/1000)}s watched`
+    : 'target unreachable';
+  setTimeout(tick, 1000);
+}
+tick();
+</script>
