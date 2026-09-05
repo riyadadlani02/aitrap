@@ -53,13 +53,19 @@ class Buffer:
 
 
 def resolve(dotted):
-    """'pkg.mod.Class.method' -> the underlying function object."""
+    """'pkg.mod.Class.method' -> the underlying function object, from the LIVE module."""
     parts = dotted.split(".")
     for i in range(len(parts), 0, -1):
-        try:
-            obj = importlib.import_module(".".join(parts[:i]))
-        except ImportError:
-            continue
+        modname = ".".join(parts[:i])
+        # Prefer an already-imported module: importing afresh builds a second module
+        # object whose code we would arm while the running one keeps executing untrapped.
+        obj = sys.modules.get(modname)
+        if obj is None:
+            try:
+                obj = importlib.import_module(modname)
+            except ImportError:
+                continue
+        obj = _prefer_main(obj)
         try:
             for attr in parts[i:]:
                 obj = getattr(obj, attr)
@@ -67,6 +73,18 @@ def resolve(dotted):
             raise LookupError(f"{dotted}: {exc}") from None
         return obj
     raise LookupError(f"{dotted}: no importable module prefix")
+
+
+def _prefer_main(mod):
+    """A script launched directly runs as __main__. Importing it by its package name
+    yields a different module whose functions never run, so traps on it never fire."""
+    main = sys.modules.get("__main__")
+    if main is None or main is mod:
+        return mod
+    path = getattr(mod, "__file__", None)
+    if path and path == getattr(main, "__file__", None):
+        return main
+    return mod
 
 
 def code_of(fn):

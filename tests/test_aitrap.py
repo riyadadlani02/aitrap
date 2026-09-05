@@ -145,6 +145,23 @@ def test_recent_objects_survive_collection():
     assert render.expand(oid)["fields"]["code"]["value"] == "TECH15", render.expand(oid)
 
 
+def test_symbol_in_the_running_script_resolves_to_the_live_module():
+    """Arming `pkg.script.fn` while that script runs as __main__ must hit the live code,
+    not a second copy created by importing it — that silently captures nothing."""
+    import types
+
+    main = sys.modules["__main__"]
+    fake = types.ModuleType("fake_pkg_module")
+    fake.__file__ = getattr(main, "__file__", __file__)
+    sys.modules["fake_pkg_module"] = fake
+    try:
+        from aitrap.engine import resolve
+
+        assert resolve("fake_pkg_module.evaluate_promo") is evaluate_promo
+    finally:
+        del sys.modules["fake_pkg_module"]
+
+
 def test_livekit_trapset_resolves():
     from aitrap import trapsets
 

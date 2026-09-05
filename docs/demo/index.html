@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>aitrap console</title>
+<title>aitrap console — live demo</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -80,6 +80,16 @@
   @media (max-width:720px){main{grid-template-columns:1fr}aside{display:none}}
 </style>
 
+<div id="replay-note">Recorded session, replaying in your browser. Nothing is running here —
+  point the real console at your own process to see live values.
+  <a href="../">What this is</a></div>
+<style>
+  #replay-note{padding:9px 20px;background:#1d2432;border-bottom:1px solid #28313f;
+    color:#79839a;font:400 12.5px/1.5 var(--sans)}
+  #replay-note a{color:#7fd1c1;text-decoration:none;border-bottom:1px solid #3a4759}
+  #replay-note a:hover{border-bottom-color:#7fd1c1}
+</style>
+
 <header>
   <div class="brand">aitrap <span>console</span></div>
   <div class="stat"><i class="pulse beating" id="dot"></i><span id="alive">connecting</span></div>
@@ -112,6 +122,61 @@
   </section>
 </main>
 
+<script>
+// Replay transport: same shapes the real server returns, fed from a recorded run.
+(async function(){
+  const data = await fetch('timeline.json').then(r => r.json());
+  const src = data.events, objects = data.objects;
+  const T0 = src[0].ts, SPAN = (src[src.length-1].ts - T0) + 2.5;
+  const started = Date.now() / 1000;
+  const symbols = [...new Set(src.map(e => e.symbol))];
+  let out = [], idx = 0, loop = 0, seq = 0, base = 0;
+
+  function release(){
+    const t = Date.now() / 1000 - started;
+    for (let guard = 0; guard < 500; guard++){
+      if (idx >= src.length){ idx = 0; loop++; }
+      const due = loop * SPAN + (src[idx].ts - T0);
+      if (due > t) return;
+      out.push({...src[idx], ts: started + due, seq: ++seq});
+      idx++;
+      if (out.length > 400) out.shift();
+    }
+  }
+
+  const json = body => Promise.resolve(new Response(JSON.stringify(body),
+    {headers: {'Content-Type': 'application/json'}}));
+
+  const real = window.fetch;
+  window.fetch = (input, init) => {
+    const url = new URL(input, location.href);
+    const q = url.searchParams;
+    if (url.pathname.endsWith('timeline.json')) return real(input, init);
+
+    if (url.pathname.endsWith('/poll')){
+      release();
+      const cursor = +(q.get('cursor') || 0), limit = +(q.get('limit') || 100);
+      const events = out.filter(e => e.seq > cursor && e.seq > base).slice(0, limit);
+      const nextCursor = events.length ? events[events.length - 1].seq : cursor;
+      return json({events, nextCursor, hasMore: out.length && out[out.length-1].seq > nextCursor,
+                   dropped: 0});
+    }
+    if (url.pathname.endsWith('/traps')){
+      release();
+      return json({traps: symbols.map((s, i) => ({
+        trapId: i + 1, symbol: s, events: ['call','return'], when: null, capture: null,
+        hits: out.filter(e => e.symbol === s && e.seq > base).length, disarmed: null}))});
+    }
+    if (url.pathname.endsWith('/inspect')){
+      const r = objects[q.get('objectId')];
+      return json(r || {error: `objectId ${q.get('objectId')} is gone: collected, or older `
+        + `than the last 256 captured objects`});
+    }
+    if (url.pathname.endsWith('/events')){ base = seq; return json({cleared: true}); }
+    return real(input, init);
+  };
+})();
+</script>
 <script>
 const WINDOW_MS = 90000;
 const KIND_COLOR = {call:'#e0a33e', return:'#3fb8a0', raise:'#e0656f'};

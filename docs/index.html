@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aitrap — read a running AI agent without stopping it</title>
+<meta name="description" content="Non-stopping runtime traps for live AI agent processes. Capture real values from a running agent without pausing it.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161f; --ink2:#171d29; --line:#28313f; --text:#d7dde8;
+    --dim:#79839a; --faint:#4d5768; --live:#7fd1c1;
+    --call:#e0a33e; --return:#3fb8a0; --stop:#e0656f;
+    --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --wrap:1080px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font:16px/1.65 var(--sans);
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 28px}
+  a{color:var(--live)}
+  code,kbd{font-family:var(--mono)}
+
+  /* nav */
+  nav{border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:26px;padding-top:16px;padding-bottom:16px}
+  .logo{font-weight:600;letter-spacing:-.01em;font-size:17px}
+  .logo em{font-style:normal;color:var(--faint);font-weight:400}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px}
+  nav a:hover{color:var(--text)}
+  nav .sp{margin-left:auto}
+
+  /* hero */
+  .hero{padding:88px 0 64px;border-bottom:1px solid var(--line)}
+  h1{font:600 clamp(34px,5.4vw,58px)/1.08 var(--sans);letter-spacing:-.03em;margin:0;
+     max-width:19ch}
+  h1 .thin{color:var(--dim);font-weight:400}
+  .lede{margin:26px 0 0;max-width:60ch;font-size:19px;line-height:1.6;color:var(--dim)}
+  .lede b{color:var(--text);font-weight:500}
+  .cta{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:11px 20px;border-radius:4px;text-decoration:none;
+       font:500 15px/1 var(--sans)}
+  .btn.solid{background:var(--live);color:#0e1219}
+  .btn.solid:hover{background:#96ded0}
+  .btn.ghost{border:1px solid var(--line);color:var(--text)}
+  .btn.ghost:hover{border-color:var(--faint)}
+
+  /* the split: what happens when you pause */
+  section{padding:76px 0;border-bottom:1px solid var(--line)}
+  h2{font:600 30px/1.2 var(--sans);letter-spacing:-.02em;margin:0 0 14px;max-width:26ch}
+  .sub{color:var(--dim);max-width:64ch;margin:0 0 40px;font-size:17px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);
+         border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .pane{background:var(--ink2);padding:26px 24px}
+  .pane h3{margin:0 0 4px;font:500 15px/1.4 var(--sans)}
+  .pane .who{font:400 12.5px/1 var(--mono);color:var(--faint);margin-bottom:18px}
+  .pane.bad h3{color:var(--stop)} .pane.good h3{color:var(--live)}
+  .tl{list-style:none;margin:0;padding:0;font:400 13.5px/1.5 var(--mono)}
+  .tl li{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:5px 0;color:var(--dim)}
+  .tl li span{color:var(--faint);text-align:right}
+  .tl li.hit{color:var(--text)}
+  .tl li.dead{color:var(--stop)}
+  .tl li.alive{color:var(--live)}
+
+  /* demo */
+  .demo-frame{border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--ink2)}
+  .demo-frame iframe{display:block;width:100%;height:560px;border:0;background:var(--ink)}
+  .demo-hint{margin:14px 0 0;color:var(--faint);font-size:14px}
+
+  /* steps */
+  .steps{counter-reset:s;display:grid;gap:1px;background:var(--line);
+         border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .step{background:var(--ink2);padding:22px 24px;display:grid;
+        grid-template-columns:26px 1fr;gap:18px;align-items:start}
+  .step::before{counter-increment:s;content:counter(s);font:500 13px/1.7 var(--mono);
+                color:var(--faint)}
+  .step h3{margin:0 0 5px;font:500 15.5px/1.4 var(--sans)}
+  .step p{margin:0;color:var(--dim);font-size:15px}
+  .step code{display:block;margin-top:10px;color:var(--live);font-size:13.5px;
+             background:var(--ink);padding:9px 12px;border-radius:3px;overflow-x:auto}
+
+  /* numbers */
+  .figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
+        background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .fig{background:var(--ink2);padding:22px 24px}
+  .fig b{display:block;font:500 30px/1.1 var(--mono);letter-spacing:-.02em}
+  .fig span{color:var(--dim);font-size:14px;display:block;margin-top:6px}
+  .fig.ok b{color:var(--live)}
+
+  /* trapsets table */
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th,td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--faint);font:500 12.5px/1 var(--mono);font-weight:400}
+  td code{font-size:13.5px;color:var(--text)}
+  .yes{color:var(--live)} .no{color:var(--call)}
+
+  .limits li{margin-bottom:12px;color:var(--dim);max-width:70ch}
+  .limits b{color:var(--text);font-weight:500}
+
+  footer{padding:44px 0 64px;color:var(--faint);font-size:14px}
+  footer a{color:var(--dim);text-decoration:none}
+  footer a:hover{color:var(--text)}
+
+  @media (max-width:760px){
+    .split{grid-template-columns:1fr}
+    .hero{padding:56px 0 44px}
+    .demo-frame iframe{height:460px}
+  }
+</style>
+
+<nav><div class="wrap">
+  <span class="logo">aitrap <em>runtime traps</em></span>
+  <a href="#pause">Why</a>
+  <a href="#demo">Demo</a>
+  <a href="#use">Use it</a>
+  <span class="sp"></span>
+  <a href="https://github.com/riyadadlani02/aitrap">GitHub</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <h1>Read a running AI agent <span class="thin">without stopping it.</span></h1>
+  <p class="lede">Debuggers answer questions by freezing the program. That works on a checkout
+     screen. Do it to an agent and the model request times out, the session drops, and the bug
+     you were chasing is gone. <b>aitrap traps capture and continue</b> — real values out of a
+     live process that never pauses.</p>
+  <div class="cta">
+    <a class="btn solid" href="#demo">See it running</a>
+    <a class="btn ghost" href="https://github.com/riyadadlani02/aitrap">Read the code</a>
+  </div>
+</div></header>
+
+<section id="pause"><div class="wrap">
+  <h2>What a breakpoint does to an agent</h2>
+  <p class="sub">Same moment, same bug, two tools. The difference isn't convenience — one of these
+     destroys the evidence.</p>
+  <div class="split">
+    <div class="pane bad">
+      <h3>Breakpoint hit</h3>
+      <div class="who">a stepping debugger</div>
+      <ul class="tl">
+        <li><span>0.0s</span>execution stops, locals readable</li>
+        <li><span>4s</span>you start reading the frame</li>
+        <li class="dead"><span>10s</span>model request times out</li>
+        <li class="dead"><span>18s</span>session teardown, call dropped</li>
+        <li class="dead"><span>—</span>state you wanted is gone</li>
+      </ul>
+    </div>
+    <div class="pane good">
+      <h3>Trap fires</h3>
+      <div class="who">aitrap</div>
+      <ul class="tl">
+        <li class="hit"><span>0.0s</span>locals captured, ~18µs</li>
+        <li class="alive"><span>0.0s</span>function returns normally</li>
+        <li class="alive"><span>—</span>agent keeps talking</li>
+        <li class="hit"><span>later</span>you poll the buffer, unhurried</li>
+        <li class="hit"><span>—</span>bug reproduced 400 calls in</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <h2>A recorded agent, replaying</h2>
+  <p class="sub">This is the real console with a real recording — captured by running the toy
+     agent in the repo under aitrap. Click any row to open its locals, then click a
+     non-primitive value to expand the object behind it.</p>
+  <div class="demo-frame"><iframe src="demo/" title="aitrap console replaying a recorded session"
+       loading="lazy"></iframe></div>
+  <p class="demo-hint">Look for <code>apply_discount</code>: it receives
+     <code>base_amount 565.64</code> while the coupon it is checking wants
+     <code>min_spend 600.0</code>. The discount silently never applies. That's the bug, visible
+     only from live values — the source looks fine. Note <code>customer_email</code> comes back
+     redacted.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What it costs to leave armed</h2>
+  <p class="sub">Traps are armed per function, not globally, so code you didn't trap runs at full
+     speed. Measured on Python 3.13.</p>
+  <div class="figs">
+    <div class="fig ok"><b>0.94×</b><span>untrapped code — indistinguishable from no traps</span></div>
+    <div class="fig"><b>~18ns</b><span>added per call to a trapped function</span></div>
+    <div class="fig ok"><b>0</b><span>times the process pauses</span></div>
+    <div class="fig"><b>0</b><span>dependencies outside the standard library</span></div>
+  </div>
+</div></section>
+
+<section id="use"><div class="wrap">
+  <h2>Four commands</h2>
+  <p class="sub">No code changes to the thing you're debugging. The launcher puts aitrap on the
+     path; the agent under test never imports it.</p>
+  <div class="steps">
+    <div class="step"><div>
+      <h3>Start the process under aitrap</h3>
+      <p>Or set <code>PYTHONPATH</code> for a container you don't launch yourself.</p>
+      <code>aitrap run -- python my_agent.py</code>
+    </div></div>
+    <div class="step"><div>
+      <h3>Arm a trap while it runs</h3>
+      <p>A dotted symbol, or a framework hook name so you don't hunt for line numbers.</p>
+      <code>aitrap trap --trapset livekit --hook on-tool-call</code>
+    </div></div>
+    <div class="step"><div>
+      <h3>Only capture the case you care about</h3>
+      <p>A predicate over the function's own locals — for the bug that shows up on call 400.</p>
+      <code>aitrap trap myapp.pricing.apply_discount --when "base_amount &lt; coupon.min_spend"</code>
+    </div></div>
+    <div class="step"><div>
+      <h3>Read what happened</h3>
+      <p>Returns immediately with a cursor. Nothing blocks, so an AI agent can poll between
+         other work — or open the console in a browser.</p>
+      <code>aitrap poll 0</code>
+    </div></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Framework hooks</h2>
+  <p class="sub">Adapters are plain JSON mapping a hook name to real symbols. Frameworks move, so
+     <code>aitrap probe</code> resolves every symbol against what's actually installed and names
+     the ones that don't.</p>
+  <table>
+    <tr><th>adapter</th><th>hooks</th><th>state</th></tr>
+    <tr>
+      <td><code>livekit</code></td>
+      <td>on-tool-call, on-llm-request, on-handoff, on-user-turn</td>
+      <td class="yes">verified against a live production voice agent — 7/7 armed mid-session</td>
+    </tr>
+    <tr>
+      <td><code>langchain</code></td>
+      <td>on-tool-call, on-llm-request, on-handoff, on-state-write</td>
+      <td class="no">written blind, not yet verified — run <code>aitrap probe langchain</code></td>
+    </tr>
+    <tr>
+      <td><code>openai_agents</code></td>
+      <td>on-tool-call, on-llm-request, on-handoff</td>
+      <td class="no">written blind, not yet verified — run <code>aitrap probe openai_agents</code></td>
+    </tr>
+  </table>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Where it stops short</h2>
+  <p class="sub">Worth knowing before you point it at anything sensitive.</p>
+  <ul class="limits">
+    <li><b>Redaction matches key names, not values.</b> A field called <code>dob</code> is caught;
+      a date of birth buried inside a free-text string is not. Don't assume a captured buffer is
+      safe to paste somewhere.</li>
+    <li><b>It can't attach to a process that's already running.</b> Entry happens at start-up.
+      Injecting into a live PID needs ptrace or lldb, which is the next thing to fix.</li>
+    <li><b>Python 3.12 and up.</b> The whole design rests on <code>sys.monitoring</code>, which
+      doesn't exist before that.</li>
+    <li><b>If you need to step line by line, use a stepping debugger.</b> aitrap deliberately
+      cannot. It does the part they can't.</li>
+  </ul>
+</div></section>
+
+<footer><div class="wrap">
+  MIT licensed · <a href="https://github.com/riyadadlani02/aitrap">github.com/riyadadlani02/aitrap</a>
+  · built after seeing <a href="https://github.com/PatilShreyas/debroid">debroid</a> do this for Android
+</div></footer>
+</html>
