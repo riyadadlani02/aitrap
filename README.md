@@ -1,7 +1,7 @@
 # aitrap
 
 **[Site and live demo →](https://riyadadlani02.github.io/aitrap/)** ·
-**[90-second video →](https://riyadadlani02.github.io/aitrap/#video)**
+**[Demo video →](https://riyadadlani02.github.io/aitrap/#video)**
 
 Non-stopping runtime traps for live AI agent processes — so an AI coding agent can read **real
 values** out of a running agent without freezing the agent it's debugging.
@@ -56,10 +56,11 @@ a non-primitive to expand it from the live process.
 |---|---|
 | [Checkout](https://riyadadlani02.github.io/aitrap/demo-phone/) | A coupon silently rejected because two functions disagree about the subtotal. Before/after the fix. |
 | [Voice agent](https://riyadadlani02.github.io/aitrap/demo-voice/) | A LiveKit call filed against the wrong person because a matcher defaulted to `self`. Before/after the fix. |
-| [Console](https://riyadadlani02.github.io/aitrap/demo/) | The live console replaying a recorded run. |
+| [Console](https://riyadadlani02.github.io/aitrap/demo/) | The live console replaying recorded runs of four agents — plain Python, [LangChain + LangGraph](https://riyadadlani02.github.io/aitrap/demo/?ds=langchain), [OpenAI Agents](https://riyadadlani02.github.io/aitrap/demo/?ds=openai_agents), [Pydantic AI](https://riyadadlani02.github.io/aitrap/demo/?ds=pydantic_ai). |
 
 Every state in them is a real capture from `examples/`, in both the broken and repaired form —
-`CHECKOUT_FIXED=1` and `VOICE_FIXED=1` apply the respective repairs.
+`CHECKOUT_FIXED=1` and `VOICE_FIXED=1` apply the respective repairs. Regenerate the framework
+recordings (no API keys) with `python scripts/record_timeline.py`.
 
 ## Trap sets
 

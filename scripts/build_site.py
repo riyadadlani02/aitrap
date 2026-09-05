@@ -12,14 +12,26 @@ UI = ROOT / "aitrap" / "ui.html"
 OUT = ROOT / "docs" / "demo" / "index.html"
 
 NOTE = """
-<div id="replay-note">Recorded session, replaying in your browser. Nothing is running here —
-  point the real console at your own process to see live values.
-  <a href="../">What this is</a></div>
+<div id="replay-note">
+  <span>Recorded session, replaying in your browser. Nothing is running here &mdash; point the
+    real console at your own process to see live values. <a href="../">What this is</a></span>
+  <label>agent
+    <select id="ds" onchange="location.search = '?ds=' + this.value"></select>
+  </label>
+</div>
+<div id="replay-what"></div>
 <style>
-  #replay-note{padding:9px 20px;background:#1d2432;border-bottom:1px solid #28313f;
+  #replay-note{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:9px 20px;background:#1d2432;border-bottom:1px solid #28313f;
     color:#79839a;font:400 12.5px/1.5 var(--sans)}
   #replay-note a{color:#7fd1c1;text-decoration:none;border-bottom:1px solid #3a4759}
   #replay-note a:hover{border-bottom-color:#7fd1c1}
+  #replay-note label{margin-left:auto;display:flex;align-items:center;gap:8px;color:#4d5768}
+  #replay-note select{background:#12161f;color:#d7dde8;border:1px solid #28313f;border-radius:3px;
+    padding:5px 8px;font:400 12.5px/1 var(--sans)}
+  #replay-what{padding:8px 20px;background:#161c27;border-bottom:1px solid #28313f;
+    color:#79839a;font:400 12.5px/1.5 var(--mono)}
+  #replay-what b{color:#d7dde8;font-weight:500}
 </style>
 """
 
@@ -27,7 +39,25 @@ SHIM = """
 <script>
 // Replay transport: same shapes the real server returns, fed from a recorded run.
 (async function(){
-  const data = await fetch('timeline.json').then(r => r.json());
+  const SETS = {
+    toy:           ['toy agent (plain Python)', 'timeline.json',
+                    'examples/toy_agent.py &mdash; four functions trapped by dotted name, no framework'],
+    langchain:     ['LangChain + LangGraph', 'langchain.json',
+                    'examples/langchain_agent.py under <b>--trapset langchain</b> &mdash; 9 symbols armed, '
+                    + '5 fired; the four async ones sit silent in a sync graph'],
+    openai_agents: ['OpenAI Agents SDK', 'openai_agents.json',
+                    'examples/openai_agents_agent.py under <b>--trapset openai_agents</b> &mdash; 6 of 6 armed symbols fired'],
+    pydantic_ai:   ['Pydantic AI', 'pydantic_ai.json',
+                    'examples/pydantic_ai_agent.py under <b>--trapset pydantic_ai</b> &mdash; 4 of 4 armed symbols fired'],
+  };
+  const pick = new URLSearchParams(location.search).get('ds');
+  const key = SETS[pick] ? pick : 'toy';
+  const sel = document.getElementById('ds');
+  sel.innerHTML = Object.entries(SETS).map(([k, v]) =>
+    `<option value="${k}"${k === key ? ' selected' : ''}>${v[0]}</option>`).join('');
+  document.getElementById('replay-what').innerHTML = SETS[key][2];
+
+  const data = await fetch(SETS[key][1]).then(r => r.json());
   const src = data.events, objects = data.objects;
   const T0 = src[0].ts, SPAN = (src[src.length-1].ts - T0) + 2.5;
   const started = Date.now() / 1000;
@@ -53,7 +83,7 @@ SHIM = """
   window.fetch = (input, init) => {
     const url = new URL(input, location.href);
     const q = url.searchParams;
-    if (url.pathname.endsWith('timeline.json')) return real(input, init);
+    if (url.pathname.endsWith('.json')) return real(input, init);
 
     if (url.pathname.endsWith('/poll')){
       release();

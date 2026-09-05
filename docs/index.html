@@ -165,11 +165,12 @@
 </div></section>
 
 <section id="video"><div class="wrap">
-  <h2>An agent finds the bug, fixes it, and proves it</h2>
-  <p class="sub">A checkout screen rejects a coupon it should accept. The agent attaches to the
-     running backend, arms traps, triggers the failing request, reads the values, writes the
-     two-line fix, and re-runs the same trap to confirm — $638.72 down to $511.44, with the app
-     serving throughout.</p>
+  <h2>An agent finds the bug, fixes it, and proves it &mdash; twice</h2>
+  <p class="sub">Two and a half minutes, two bugs. A checkout screen rejects a coupon it should
+     accept: the agent attaches to the running backend, arms traps, triggers the failing request,
+     reads the values, writes the two-line fix and re-runs the same trap &mdash; $638.72 down to
+     $511.44, with the app serving throughout. Then the same loop on a live LiveKit call that
+     files a note against the wrong person. Every screen and every frame is a real capture.</p>
   <div class="video-frame">
     <video controls preload="none" poster="aitrap-demo-poster.jpg"
            playsinline width="1920" height="1080">
@@ -202,18 +203,17 @@
 </div></section>
 
 <section id="demo"><div class="wrap">
-  <h2>A recorded agent, replaying</h2>
-  <p class="sub">This is the real console with a real recording — captured by running the toy
-     agent in the repo under aitrap. Click any row to open its locals, then click a
-     non-primitive value to expand the object behind it.</p>
+  <h2>Four agents, four frameworks, one console</h2>
+  <p class="sub">The real console replaying real recordings &mdash; each one captured by running an
+     example from the repo under aitrap and arming that framework's trapset by name. Pick an agent
+     from the menu at the top right. Click any row for its locals, then click a non-primitive to
+     expand the object behind it.</p>
   <div class="demo-frame"><iframe src="demo/" title="aitrap console replaying a recorded session"
        loading="lazy"></iframe></div>
-  <p class="demo-hint">There's a <strong>before / after the fix</strong> toggle at the top — the
-     same traps, re-read against the repaired backend. Look for <code>apply_discount</code>: it receives
-     <code>base_amount 565.64</code> while the coupon it is checking wants
-     <code>min_spend 600.0</code>. The discount silently never applies. That's the bug, visible
-     only from live values — the source looks fine. Note <code>customer_email</code> comes back
-     redacted.</p>
+  <p class="demo-hint">Nothing here is hand-written. The LangChain run arms nine symbols and fires
+     five &mdash; the four async ones sit silent in a synchronous graph, which is exactly what you
+     want a trapset to show you. <code>scripts/record_timeline.py</code> regenerates every one of
+     these recordings with no API keys.</p>
 </div></section>
 
 <section><div class="wrap">
@@ -259,29 +259,30 @@
 
 <section><div class="wrap">
   <h2>Framework hooks</h2>
-  <p class="sub">Adapters are plain JSON mapping a hook name to real symbols. Every symbol below
-     was watched <em>firing</em> against a running agent — resolving isn't enough, since a symbol
+  <p class="sub">Adapters are plain JSON mapping a hook name to real symbols &mdash; each one links
+     to a recording of that adapter running. Every symbol below was watched <em>firing</em> against
+     a running agent — resolving isn't enough, since a symbol
      can resolve and never be called, which is how an adapter rots silently when a framework moves
      a function. <code>scripts/verify_trapset.py</code> reproduces it with no API keys.</p>
   <table>
     <tr><th>adapter</th><th>hooks</th><th>verified against</th></tr>
     <tr>
-      <td><code>livekit</code></td>
+      <td><a href="demo-voice/"><code>livekit</code></a></td>
       <td>on-tool-call, on-llm-request, on-handoff, on-user-turn</td>
       <td class="yes">livekit-agents 1.6.6, on a live production voice agent — 7/7</td>
     </tr>
     <tr>
-      <td><code>langchain</code></td>
+      <td><a href="demo/?ds=langchain"><code>langchain</code></a></td>
       <td>on-agent-run, on-llm-request, on-tool-call, on-state-write</td>
       <td class="yes">langchain-core 1.6.2 + langgraph — 9/9</td>
     </tr>
     <tr>
-      <td><code>openai_agents</code></td>
+      <td><a href="demo/?ds=openai_agents"><code>openai_agents</code></a></td>
       <td>on-agent-run, on-turn, on-llm-request, on-tool-call, on-handoff</td>
       <td class="yes">openai-agents 0.22.0 — 6/6</td>
     </tr>
     <tr>
-      <td><code>pydantic_ai</code></td>
+      <td><a href="demo/?ds=pydantic_ai"><code>pydantic_ai</code></a></td>
       <td>on-agent-run, on-llm-request, on-tool-call</td>
       <td class="yes">pydantic-ai 2.40.0 — 4/4</td>
     </tr>
