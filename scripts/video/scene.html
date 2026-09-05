@@ -11,132 +11,185 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{width:1280px;height:720px;overflow:hidden;background:var(--ink);color:var(--text);
             font-family:var(--sans);-webkit-font-smoothing:antialiased}
-  .scene{position:absolute;inset:0;padding:64px 76px;display:none;flex-direction:column;
+  .scene{position:absolute;inset:0;padding:56px 72px;display:none;flex-direction:column;
          justify-content:center}
   .scene.on{display:flex}
-  .cap{position:absolute;left:76px;bottom:30px;font:500 15px/1 var(--mono);color:var(--faint);
-       letter-spacing:.02em}
-  .chip{position:absolute;left:76px;bottom:46px;background:var(--live);color:#0e1219;
+  .chip{position:absolute;left:72px;bottom:44px;background:var(--live);color:#0e1219;
         font:600 16px/1 var(--sans);padding:9px 15px;border-radius:4px}
+  .cap{position:absolute;left:72px;bottom:30px;font:500 14px/1 var(--mono);color:var(--faint)}
 
-  h1{font:700 62px/1.06 var(--sans);letter-spacing:-.035em}
+  h1{font:700 60px/1.06 var(--sans);letter-spacing:-.035em}
   h1 .d{color:var(--dim);font-weight:400}
-  h2{font:600 40px/1.15 var(--sans);letter-spacing:-.03em;margin-bottom:14px}
-  .sub{font:400 21px/1.5 var(--sans);color:var(--dim);max-width:64ch}
+  h2{font:600 36px/1.15 var(--sans);letter-spacing:-.03em;margin-bottom:10px}
+  .sub{font:400 20px/1.5 var(--sans);color:var(--dim);max-width:62ch}
 
-  /* clock scene */
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px}
-  .col{border:1px solid var(--line);border-radius:7px;background:var(--ink2);padding:22px 24px}
-  .col h3{font:600 17px/1 var(--sans);margin-bottom:3px}
-  .col .who{font:400 13px/1 var(--mono);color:var(--faint);margin-bottom:18px}
+  /* ---- phone ---- */
+  .phone{width:330px;border:9px solid #242b39;border-radius:38px;background:#f2f3f7;
+         overflow:hidden;position:relative;flex:none;box-shadow:0 22px 60px rgba(0,0,0,.5)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:112px;height:23px;
+         background:#242b39;border-radius:0 0 14px 14px;z-index:3}
+  .screen{height:446px;overflow:hidden;background:#f2f3f7;color:#161a22;
+          font:13px/1.42 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+  .screen .hd{padding:30px 15px 10px;background:#fff;border-bottom:1px solid #e6e8ef}
+  .screen .hd b{font-size:17px;font-weight:650;letter-spacing:-.02em;display:block}
+  .screen .hd i{font-style:normal;color:#6b7280;font-size:11.5px}
+  .sec{background:#fff;margin:8px 0;padding:12px 15px;border-top:1px solid #e6e8ef;
+       border-bottom:1px solid #e6e8ef}
+  .sec h4{font:600 11px/1 var(--sans);color:#6b7280;margin-bottom:9px;display:flex;
+          justify-content:space-between}
+  .it{display:flex;justify-content:space-between;gap:9px;padding:6px 0;border-bottom:1px solid #eef0f5}
+  .it:last-child{border-bottom:0}
+  .it b{display:block;font-weight:550;font-size:12.5px}
+  .it i{font-style:normal;color:#6b7280;font-size:10.5px}
+  .it span{font-variant-numeric:tabular-nums;font-weight:550;font-size:12.5px}
+  .cprow{display:flex;gap:6px}
+  .cprow .inp{flex:1;padding:9px 11px;border:1px solid #e6e8ef;border-radius:8px;background:#fbfbfd;
+              font:13px var(--mono);color:#161a22}
+  .cprow .btn{border-radius:8px;padding:9px 15px;font:600 13px var(--sans);background:#3d4fd6;
+              color:#fff;transition:none}
+  .cprow .btn.press{background:#2c3aa8;transform:scale(.96)}
+  .msg{margin-top:8px;padding:8px 10px;border-radius:7px;font-size:11.5px}
+  .msg.err{background:#fdeaec;color:#d23b4e}
+  .r{display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px;color:#6b7280}
+  .r span:last-child{font-variant-numeric:tabular-nums;color:#161a22}
+  .r .off{color:#0f9d6b}
+  .r.tot{border-top:1px solid #e6e8ef;margin-top:6px;padding-top:9px;font-size:14px;
+         font-weight:650;color:#161a22}
+  .r.tot span:last-child{color:#3d4fd6}
+  .ring{position:absolute;border:3px solid var(--bad);border-radius:9px;pointer-events:none;
+        z-index:5;opacity:0}
+
+  /* ---- console ---- */
+  .con{border:1px solid var(--line);border-radius:7px;background:var(--ink2);overflow:hidden;
+       flex:1;min-width:0}
+  .con .bar{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;gap:20px;
+            font:400 13px/1 var(--mono);color:var(--dim)}
+  .con .bar b{color:var(--text);font-weight:500}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--live);display:inline-block;
+       margin-right:7px}
+  .fr{border-bottom:1px solid var(--line);padding:9px 16px}
+  .fr-h{display:grid;grid-template-columns:50px 1fr;gap:12px;align-items:baseline}
+  .kd{font:500 11px/1.4 var(--mono);color:var(--call)}
+  .sy{font:400 14.5px/1.4 var(--mono)}
+  .kv{display:grid;grid-template-columns:118px 1fr;gap:1px 14px;margin:5px 0 0 62px;
+      font:400 13px/1.5 var(--mono)}
+  .kk{color:var(--dim)}
+  .vv{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vv .t{color:var(--faint)}
+  .hot{background:rgba(224,101,111,.2);border-radius:3px;padding:1px 6px;color:#ffb3b9}
+  .warm{background:rgba(127,209,193,.18);border-radius:3px;padding:1px 6px;color:var(--live)}
+
+  .split{display:flex;gap:26px;align-items:flex-start;margin-top:18px}
+  #s5 .screen{height:418px}
+  #s5 .fr{padding:7px 16px}
+  #s5 .kv{gap:0 14px;line-height:1.42;margin-top:4px}
+  #s5 .con{max-height:420px;overflow:hidden}
+
+  .verdict{margin-top:14px;border-left:3px solid var(--bad);background:var(--ink2);
+           border-radius:0 5px 5px 0;padding:12px 18px;font:400 17px/1.45 var(--sans);
+           color:var(--dim)}
+  .verdict b{color:var(--text);font-weight:600}
+  .verdict .n{font-family:var(--mono)}
+
+  /* clock */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}
+  .col{border:1px solid var(--line);border-radius:7px;background:var(--ink2);padding:20px 22px}
+  .col h3{font:600 16px/1 var(--sans);margin-bottom:3px}
+  .col .who{font:400 12.5px/1 var(--mono);color:var(--faint);margin-bottom:15px}
   .col.bad h3{color:var(--bad)} .col.good h3{color:var(--live)}
-  .ev{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:7px 0;
-      font:400 16px/1.45 var(--mono);color:var(--dim)}
+  .ev{display:grid;grid-template-columns:58px 1fr;gap:13px;padding:6px 0;
+      font:400 15px/1.4 var(--mono);color:var(--dim)}
   .ev i{font-style:normal;color:var(--faint);text-align:right}
   .ev.hot{color:var(--bad)} .ev.ok{color:var(--live)} .ev.on{color:var(--text)}
 
   /* terminal */
   .term{border:1px solid var(--line);border-radius:7px;background:#0d1119;overflow:hidden;
-        margin-top:26px}
-  .term .tb{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;gap:7px}
-  .term .tb i{width:11px;height:11px;border-radius:50%;background:#2b3444;display:block}
-  .term pre{padding:20px 22px;font:400 17px/1.62 var(--mono);white-space:pre-wrap;
-            min-height:376px;color:var(--text)}
+        margin-top:22px}
+  .term .tb{padding:9px 15px;border-bottom:1px solid var(--line);display:flex;gap:7px}
+  .term .tb i{width:10px;height:10px;border-radius:50%;background:#2b3444;display:block}
+  .term pre{padding:18px 20px;font:400 16px/1.6 var(--mono);white-space:pre-wrap;
+            min-height:330px;color:var(--text)}
   .p{color:var(--live)} .o{color:var(--dim)} .k{color:var(--call)} .g{color:var(--ret)}
   .cur{background:var(--live);color:#0d1119}
 
-  /* console frames */
-  .con{border:1px solid var(--line);border-radius:7px;background:var(--ink2);overflow:hidden;
-       margin-top:22px;max-height:432px}
-  .con .bar{padding:11px 18px;border-bottom:1px solid var(--line);display:flex;gap:24px;
-            font:400 14px/1 var(--mono);color:var(--dim)}
-  .con .bar b{color:var(--text);font-weight:500}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--live);display:inline-block;
-       margin-right:8px}
-  .fr{border-bottom:1px solid var(--line);padding:10px 18px}
-  .fr-h{display:grid;grid-template-columns:58px 1fr auto;gap:14px;align-items:baseline}
-  .kd{font:500 12px/1.4 var(--mono);color:var(--call)}
-  .kd.return{color:var(--ret)}
-  .sy{font:400 16px/1.4 var(--mono)}
-  .wh{font:400 13px/1.4 var(--mono);color:var(--faint)}
-  .kv{display:grid;grid-template-columns:130px 1fr;gap:2px 16px;margin:6px 0 0 72px;
-      font:400 14px/1.5 var(--mono);max-width:1000px}
-  .kk{color:var(--dim)} .vv{color:var(--text);overflow:hidden;text-overflow:ellipsis;
-      white-space:nowrap}
-  .vv .t{color:var(--faint)}
-
-  /* table */
-  table{width:100%;border-collapse:collapse;margin-top:26px;font-size:20px}
-  td,th{text-align:left;padding:15px 12px;border-bottom:1px solid var(--line)}
-  th{color:var(--faint);font:400 14px/1 var(--mono);font-weight:400}
+  table{width:100%;border-collapse:collapse;margin-top:22px;font-size:19px}
+  td,th{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--faint);font:400 13px/1 var(--mono);font-weight:400}
   td.n{font-family:var(--mono);color:var(--live);white-space:nowrap}
-  td code{font-family:var(--mono);font-size:18px}
+  td code{font-family:var(--mono);font-size:17px}
 
-  /* figures */
-  .figs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:32px;
+  .figs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:28px;
         background:var(--line);border:1px solid var(--line);border-radius:7px;overflow:hidden}
-  .fig{background:var(--ink2);padding:26px 22px}
-  .fig b{display:block;font:500 40px/1 var(--mono);letter-spacing:-.02em}
+  .fig{background:var(--ink2);padding:24px 20px}
+  .fig b{display:block;font:500 38px/1 var(--mono);letter-spacing:-.02em}
   .fig.ok b{color:var(--live)}
-  .fig span{display:block;color:var(--dim);font-size:15px;margin-top:9px;line-height:1.35}
+  .fig span{display:block;color:var(--dim);font-size:14px;margin-top:8px;line-height:1.35}
 
-  /* outro */
   .outro{align-items:center;text-align:center;justify-content:center}
-  .outro .mark{font:700 60px/1 var(--sans);letter-spacing:-.035em}
+  .outro .mark{font:700 58px/1 var(--sans);letter-spacing:-.035em}
   .outro .mark em{font-style:normal;color:var(--dim);font-weight:400}
-  .outro .url{font:500 26px/1 var(--mono);color:var(--live);margin-top:26px}
-  .outro .url2{font:400 19px/1 var(--mono);color:var(--faint);margin-top:14px}
+  .outro .url{font:500 25px/1 var(--mono);color:var(--live);margin-top:24px}
+  .outro .url2{font:400 18px/1 var(--mono);color:var(--faint);margin-top:13px}
 </style>
 
-<div class="scene" id="s1">
-  <h1 id="h1a"></h1>
-  <p class="sub" id="h1b" style="margin-top:24px"></p>
-</div>
+<div class="scene" id="s1"><h1 id="h1a"></h1><p class="sub" id="h1b" style="margin-top:22px"></p></div>
 
 <div class="scene" id="s2">
-  <h2>Every AI agent runs on a clock.</h2>
-  <p class="sub">Model requests time out. Sessions close. Streams end. A breakpoint stops the clock
-     — and the evidence with it.</p>
+  <h2>A real app. A coupon that should apply.</h2>
+  <div class="split" style="align-items:center">
+    <div class="phone" id="ph2"><div class="notch"></div><div class="screen" id="scr2"></div>
+      <div class="ring" id="ring2"></div></div>
+    <div style="flex:1">
+      <p class="sub" id="s2txt"></p>
+    </div>
+  </div>
+  <div class="cap">examples/checkout_app — a Python backend behind a phone screen</div>
+</div>
+
+<div class="scene" id="s3">
+  <h2>You cannot breakpoint your way in.</h2>
+  <p class="sub">Model requests time out. Sessions close. Streams end. Stop the process to look,
+     and the thing you were looking at is gone.</p>
   <div class="cols">
-    <div class="col bad">
-      <h3>Breakpoint hit</h3><div class="who">a stepping debugger</div>
+    <div class="col bad"><h3>Breakpoint hit</h3><div class="who">a stepping debugger</div>
       <div class="ev" data-at="0"><i>0.0s</i><span>execution stops, locals readable</span></div>
       <div class="ev" data-at="1"><i>4s</i><span>you start reading the frame</span></div>
-      <div class="ev hot" data-at="2"><i>10s</i><span>model request times out</span></div>
+      <div class="ev hot" data-at="2"><i>10s</i><span>request times out</span></div>
       <div class="ev hot" data-at="3"><i>18s</i><span>session torn down</span></div>
       <div class="ev hot" data-at="4"><i>—</i><span>the bug is gone</span></div>
     </div>
-    <div class="col good">
-      <h3>Trap fires</h3><div class="who">aitrap</div>
+    <div class="col good"><h3>Trap fires</h3><div class="who">aitrap</div>
       <div class="ev on" data-at="0"><i>0.0s</i><span>locals captured, ~18ns</span></div>
       <div class="ev ok" data-at="1"><i>0.0s</i><span>function returns normally</span></div>
-      <div class="ev ok" data-at="2"><i>—</i><span>agent keeps working</span></div>
+      <div class="ev ok" data-at="2"><i>—</i><span>app keeps serving</span></div>
       <div class="ev on" data-at="3"><i>later</i><span>you read the buffer, unhurried</span></div>
       <div class="ev on" data-at="4"><i>—</i><span>caught on request 400</span></div>
     </div>
   </div>
 </div>
 
-<div class="scene" id="s3">
-  <h2>No changes to the thing you're debugging.</h2>
+<div class="scene" id="s4">
+  <h2>Arm a trap while it runs.</h2>
   <div class="term"><div class="tb"><i></i><i></i><i></i></div><pre id="termtext"></pre></div>
   <div class="chip">aitrap in action</div>
 </div>
 
-<div class="scene" id="s4">
-  <h2>Real frames, out of a running agent.</h2>
-  <div class="con">
-    <div class="bar"><span><i class="dot"></i>agent running</span>
-      <span><b id="nf">0</b> frames captured</span><span><b>0</b> dropped</span>
-      <span><b>0</b> pauses</span></div>
-    <div id="frames"></div>
+<div class="scene" id="s5">
+  <h2 id="s5h">Tap Apply. Read what the tap produced.</h2>
+  <div class="split">
+    <div class="phone" id="ph5"><div class="notch"></div><div class="screen" id="scr5"></div></div>
+    <div class="con">
+      <div class="bar"><span><i class="dot"></i>backend serving</span>
+        <span><b id="nf">0</b> frames</span><span><b>0</b> dropped</span><span><b>0</b> pauses</span></div>
+      <div id="frames"></div>
+    </div>
   </div>
-  <div class="cap">captured from a LangGraph agent under aitrap — nothing here is mocked</div>
+  <div class="verdict" id="verdict" style="opacity:0"></div>
 </div>
 
-<div class="scene" id="s5">
+<div class="scene" id="s6">
   <h2>Four frameworks, checked by watching them fire.</h2>
-  <p class="sub">A symbol can resolve and never be called. Each hook was verified against a real
+  <p class="sub">A symbol can resolve and never be called. Every hook was verified against a real
      running agent, not a grep.</p>
   <table>
     <tr><th>adapter</th><th>verified against</th><th></th></tr>
@@ -147,7 +200,7 @@
   </table>
 </div>
 
-<div class="scene" id="s6">
+<div class="scene" id="s7">
   <h2>What it costs to leave armed.</h2>
   <p class="sub">Traps arm per function, so code you didn't trap runs at full speed.</p>
   <div class="figs">
@@ -158,39 +211,55 @@
   </div>
 </div>
 
-<div class="scene outro" id="s7">
+<div class="scene outro" id="s8">
   <div class="mark">aitrap <em>runtime traps</em></div>
   <div class="url">github.com/riyadadlani02/aitrap</div>
   <div class="url2">riyadadlani02.github.io/aitrap</div>
 </div>
 
 <script>
-let FRAMES = [];
+let CHECKOUT = null;
 const $ = s => document.querySelector(s);
 const clamp = v => Math.max(0, Math.min(1, v));
 const ease = p => 1 - Math.pow(1 - p, 3);
 const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+const money = n => '$' + Number(n).toFixed(2);
 
 const SCENES = [
-  {id:'s1', at:0,    dur:7},
-  {id:'s2', at:7,    dur:14},
-  {id:'s3', at:21,   dur:20},
-  {id:'s4', at:41,   dur:21},
-  {id:'s5', at:62,   dur:11},
-  {id:'s6', at:73,   dur:8},
-  {id:'s7', at:81,   dur:7},
+  {id:'s1', at:0},  {id:'s2', at:6},  {id:'s3', at:23}, {id:'s4', at:37},
+  {id:'s5', at:55}, {id:'s6', at:78}, {id:'s7', at:88}, {id:'s8', at:96},
 ];
-const DURATION = 88;
+const DURATION = 103;
+
+function phoneHTML(r, opts){
+  const showMsg = opts.showMsg, showSummary = opts.showSummary, pressed = opts.pressed;
+  const items = opts.items === false ? '' : `
+    <div class="sec"><h4>Order Items <span>${r.items.length} items</span></h4>
+      ${r.items.map(i => `<div class="it"><div><b>${esc(i.name)}</b><i>${esc(i.cat)} · Qty ${i.qty}</i></div>
+        <span>${money(i.price * i.qty)}</span></div>`).join('')}</div>`;
+  return `
+    <div class="hd"><b>Checkout</b><i>Review your items and complete your order</i></div>
+    ${items}
+    <div class="sec"><h4>Promo &amp; Discounts</h4>
+      <div class="cprow"><div class="inp">TECH15</div>
+        <div class="btn${pressed ? ' press' : ''}">Apply</div></div>
+      ${showMsg && r.promoError ? `<div class="msg err">${esc(r.promoError)}</div>` : ''}</div>
+    ${showSummary ? `<div class="sec"><h4>Payment Summary</h4>
+      <div class="r"><span>Gross Subtotal</span><span>${money(r.grossSubtotal)}</span></div>
+      <div class="r"><span>Member Discount (${esc(r.tier)} Tier)</span><span class="off">−${money(r.memberDiscount)}</span></div>
+      <div class="r"><span>Promo Discount (None)</span><span>${money(0)}</span></div>
+      ${opts.items === false ? '' : `<div class="r"><span>Shipping</span><span>${money(r.shipping)}</span></div>`}
+      <div class="r tot"><span>Total Amount Due</span><span>${money(r.total)}</span></div></div>` : ''}`;
+}
 
 const TERM = [
-  {d:0.0, t:'$ ', type:'aitrap run -- python agent.py', cls:'p'},
-  {d:2.2, out:'[aitrap] listening on 127.0.0.1:51498', cls:'o'},
-  {d:2.9, t:'$ ', type:'aitrap trap --trapset langchain', cls:'p'},
-  {d:5.6, out:'{ "armed": 9, "failed": 0 }', cls:'g'},
-  {d:6.4, t:'$ ', type:'aitrap poll 0', cls:'p'},
-  {d:8.4, out:'{\n  "events": [\n    { "kind": "call",\n      "symbol": "…tools.base.BaseTool.run",\n      "locals": { "tool_input": {"order_id": "A-1"} },\n      "task": "Task-12" },', cls:'o'},
-  {d:11.6, out:'    { "kind": "call",\n      "symbol": "…chat_models.BaseChatModel.invoke",\n      "locals": { "input": "where is my order?" } }\n  ],\n  "nextCursor": 24, "dropped": 0 }', cls:'o'},
-  {d:15.0, out:'\n# the agent never stopped serving', cls:'k'},
+  {d:0.0, t:'$ ', type:'aitrap run -- python checkout_app/backend.py', cls:'p'},
+  {d:2.6, out:'[aitrap] listening on 127.0.0.1:54677\n[checkout] http://127.0.0.1:8000/', cls:'o'},
+  {d:3.6, t:'$ ', type:'aitrap trap backend.PromoCouponEngine.evaluate_promo', cls:'p'},
+  {d:6.6, out:'{ "armed": [ { "trapId": 1, "hits": 0 } ], "failed": [] }', cls:'g'},
+  {d:7.6, t:'$ ', type:'aitrap trap backend.TierDiscountService.compute_discount', cls:'p'},
+  {d:10.6, out:'{ "armed": [ { "trapId": 2, "hits": 0 } ], "failed": [] }', cls:'g'},
+  {d:11.6, out:'\n# the app never stopped serving. now tap Apply on the phone.', cls:'k'},
 ];
 
 function renderTerm(local){
@@ -198,69 +267,101 @@ function renderTerm(local){
   for (const line of TERM){
     if (local < line.d) break;
     if (line.type){
-      const shown = Math.floor(clamp((local - line.d) / 1.1) * line.type.length);
+      const shown = Math.floor(clamp((local - line.d) / 1.5) * line.type.length);
       html += `<span class="${line.cls}">${esc(line.t)}</span>${esc(line.type.slice(0, shown))}`;
       if (shown < line.type.length){ html += '<span class="cur"> </span>\n'; return html; }
       html += '\n';
-    } else {
-      html += `<span class="${line.cls}">${esc(line.out)}</span>\n`;
-    }
+    } else html += `<span class="${line.cls}">${esc(line.out)}</span>\n`;
   }
   return html;
 }
 
-function renderFrames(local, dur){
-  const calls = FRAMES.filter(f => f.kind === 'call');
-  const n = Math.min(calls.length, Math.floor(clamp(local / (dur - 5)) * 7) + 1);
-  const show = calls.slice(0, n).reverse().slice(0, 4);
-  $('#nf').textContent = n * 2;
-  $('#frames').innerHTML = show.map(ev => {
-    const locals = Object.entries(ev.locals || {}).slice(0, 3);
-    return `<div class="fr">
-      <div class="fr-h"><span class="kd ${ev.kind}">${ev.kind}</span>
-        <span class="sy">${esc(ev.symbol.split('.').slice(-2).join('.'))}</span>
-        <span class="wh">${esc((ev.where || '').split('/').pop())}</span></div>
-      <div class="kv">${locals.map(([k, v]) => `<div class="kk">${esc(k)}</div>
-        <div class="vv">${esc(v.isPrimitive ? JSON.stringify(v.value) : v.type)}
-        <span class="t">${esc(v.isPrimitive ? v.type : '')}</span></div>`).join('')}</div>
-    </div>`;
-  }).join('');
+const HOT = {base_amount:'hot', subtotal:'hot', gross_amount:'warm'};
+
+function frameHTML(ev, max){
+  const locals = Object.entries(ev.locals || {})
+    .filter(([k, v]) => v.isPrimitive || v.type === 'dict')
+    .sort((a, b) => (HOT[b[0]] ? 1 : 0) - (HOT[a[0]] ? 1 : 0))
+    .slice(0, max || 3);
+  return `<div class="fr"><div class="fr-h"><span class="kd">call</span>
+      <span class="sy">${esc(ev.symbol.split('backend.').pop())}</span></div>
+    <div class="kv">${locals.map(([k, v]) => {
+      const cls = HOT[k];
+      const txt = v.isPrimitive ? JSON.stringify(v.value)
+        : Object.entries(v.value || {}).map(([a, b]) => `${a}=${JSON.stringify(b.value)}`).join(' ');
+      return `<div class="kk">${esc(k)}</div><div class="vv">${cls
+        ? `<span class="${cls}">${esc(txt)}</span>` : esc(txt)}</div>`;
+    }).join('')}</div></div>`;
 }
 
 function seek(t){
   const cur = SCENES.filter(s => t >= s.at).pop() || SCENES[0];
-  for (const s of SCENES) $('#' + s.id).classList.toggle('on', s.id === cur.id);
+  for (const s of SCENES) document.getElementById(s.id).classList.toggle('on', s.id === cur.id);
   const local = t - cur.at;
+  const st = CHECKOUT.states['TECH15|1'];
 
   if (cur.id === 's1'){
-    const a = 'Your agent has a bug.';
+    const a = 'A bug you cannot stop to look at.';
     const b = 'It happens on request 400, at 3am, once.';
     $('#h1a').innerHTML = esc(a.slice(0, Math.floor(clamp(local / 1.6) * a.length))) +
       (local > 2.4 ? `<br><span class="d">${esc(b.slice(0, Math.floor(clamp((local - 2.4) / 1.8) * b.length)))}</span>` : '');
-    $('#h1b').textContent = local > 4.6
-      ? 'A debugger has to be there when it happens. It cannot be.' : '';
+    $('#h1b').textContent = local > 4.6 ? 'Every debugger you have wants to freeze the process.' : '';
   }
+
   if (cur.id === 's2'){
-    document.querySelectorAll('#s2 .ev').forEach(el => {
-      el.style.opacity = local > 1.4 + (+el.dataset.at) * 1.5 ? 1 : 0.12;
-    });
+    const pressed = local > 3.4 && local < 4.1;
+    $('#scr2').innerHTML = phoneHTML(st.response, {
+      pressed, showMsg: local > 4.4, showSummary: local > 6.2});
+    const ring = $('#ring2');
+    if (local > 5.4){
+      ring.style.cssText = 'left:16px;right:16px;top:322px;height:44px;opacity:' +
+        ease(clamp((local - 5.4) / 0.6));
+    } else ring.style.opacity = 0;
+    const lines = [
+      [1.6, 'A $628.49 cart. A coupon for 15% off orders over $600.'],
+      [4.8, 'It is rejected — the app says the order has not reached $600.'],
+      [7.6, 'The total lands on $638.72: exactly what you pay with no coupon at all.'],
+      [10.6, 'The pricing code reads fine. Nothing in it looks wrong.'],
+    ];
+    $('#s2txt').innerHTML = lines.filter(([d]) => local > d)
+      .map(([d, s], i) => `<span style="opacity:${i === 0 ? 1 : 0.92}">${esc(s)}</span>`).join('<br><br>');
   }
-  if (cur.id === 's3') $('#termtext').innerHTML = renderTerm(local);
-  if (cur.id === 's4') renderFrames(local, cur.dur);
-  if (cur.id === 's5')
-    document.querySelectorAll('#s5 tr[data-at]').forEach(el => {
-      el.style.opacity = local > 1.8 + (+el.dataset.at) * 1.1 ? 1 : 0.12;
-    });
+
+  if (cur.id === 's3')
+    document.querySelectorAll('#s3 .ev').forEach(el => {
+      el.style.opacity = local > 1.2 + (+el.dataset.at) * 1.2 ? 1 : 0.12; });
+
+  if (cur.id === 's4') $('#termtext').innerHTML = renderTerm(local);
+
+  if (cur.id === 's5'){
+    const pressed = local > 1.2 && local < 1.9;
+    $('#scr5').innerHTML = phoneHTML(st.response, {
+      pressed, showMsg: local > 2.2, showSummary: local > 2.2, items: false});
+    const calls = st.events.filter(e => e.kind === 'call');
+    const n = local < 2.4 ? 0 : Math.min(calls.length, Math.floor((local - 2.4) / 1.5) + 1);
+    $('#nf').textContent = n * 2;
+    $('#frames').innerHTML = calls.slice(0, n).map(ev => frameHTML(ev, 2)).join('');
+    const v = $('#verdict');
+    if (local > 12.5){
+      v.style.opacity = ease(clamp((local - 12.5) / 0.7));
+      v.innerHTML = `Same request. <b>compute_discount</b> saw <b class="n">628.49</b>, ` +
+        `<b>evaluate_promo</b> was handed <b class="n">565.64</b> — the figure after the member ` +
+        `discount. The coupon is judged against the wrong number.`;
+    } else v.style.opacity = 0;
+    $('#s5h').textContent = local > 12.5
+      ? 'Two functions, one request, two different subtotals.'
+      : 'Tap Apply. Read what the tap produced.';
+  }
+
   if (cur.id === 's6')
-    document.querySelectorAll('#s6 .fig').forEach(el => {
-      el.style.opacity = local > 1.2 + (+el.dataset.at) * 0.7 ? 1 : 0.12;
-    });
-  if (cur.id === 's7'){
-    const p = ease(clamp(local / 1.4));
-    $('#s7').style.opacity = p;
-  }
+    document.querySelectorAll('#s6 tr[data-at]').forEach(el => {
+      el.style.opacity = local > 1.6 + (+el.dataset.at) * 1.1 ? 1 : 0.12; });
+  if (cur.id === 's7')
+    document.querySelectorAll('#s7 .fig').forEach(el => {
+      el.style.opacity = local > 1.1 + (+el.dataset.at) * 0.7 ? 1 : 0.12; });
+  if (cur.id === 's8') $('#s8').style.opacity = ease(clamp(local / 1.4));
 }
 window.seek = seek;
 window.DURATION = DURATION;
-window.ready = fetch('frames.json').then(r => r.json()).then(d => { FRAMES = d.events; seek(0); return true; });
+window.ready = fetch('checkout.json').then(r => r.json()).then(d => { CHECKOUT = d; seek(0); return true; });
 </script>
